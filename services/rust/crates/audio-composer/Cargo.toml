@@ -7,5 +7,7 @@ edition = "2021"
 serde = { version = "1.0.219", features = ["derive"] }
 envy = { version = "0.4.2" }
 actix-rt = { version = "2.10.0" }
+actix-web = { version = "4.10.2" }
+dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
 
 scheduler-client = { path = "../scheduler-client" }
