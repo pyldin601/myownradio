@@ -3,7 +3,9 @@ use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use scheduler_client::scheduler_client::SchedulerClient;
 
+mod composer;
 mod config;
+mod format;
 
 const SHUTDOWN_TIMEOUT: u64 = 30;
 
