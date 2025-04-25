@@ -9,5 +9,10 @@ envy = { version = "0.4.2" }
 actix-rt = { version = "2.10.0" }
 actix-web = { version = "4.10.2" }
 dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
+futures = { version = "0.3.31" }
+bytes = { version = "1.10.1" }
+tracing = { version = "0.1.41" }
+async-process = { version = "2.3.0" }
 
 scheduler-client = { path = "../scheduler-client" }
+thiserror = "2.0.12"
