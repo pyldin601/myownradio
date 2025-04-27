@@ -77,10 +77,12 @@ pub(crate) fn compose_stream(
                             }
                             ComposeTrackEvent::Eof { chunks, .. } if chunks == 0 => {
                                 running_time.advance_by_duration(&Duration::from_millis(100));
+                                break;
                             }
                             ComposeTrackEvent::Eof { .. } => {
                                 let pts = running_time.time().clone();
                                 output_sink.send(ComposeStreamEvent::Eof { pts }).await?;
+                                break;
                             }
                         }
                     }
