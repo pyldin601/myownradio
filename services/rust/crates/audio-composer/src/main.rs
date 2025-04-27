@@ -1,5 +1,6 @@
 use crate::config::Config;
-use actix_web::web::Data;
+use crate::http::{get_stream, restart_stream};
+use actix_web::web;
 use actix_web::{App, HttpServer};
 use scheduler_client::scheduler_client::SchedulerClient;
 
@@ -7,6 +8,7 @@ mod composer;
 mod config;
 mod constants;
 mod ffmpeg;
+mod http;
 mod running_time;
 
 const SHUTDOWN_TIMEOUT: u64 = 30;
@@ -21,8 +23,13 @@ async fn main() -> Result<(), std::io::Error> {
 
     let server = HttpServer::new(move || {
         App::new()
-            .app_data(Data::new(config.clone()))
-            .app_data(Data::new(scheduler_client.clone()))
+            .app_data(web::Data::new(config.clone()))
+            .app_data(web::Data::new(scheduler_client.clone()))
+            .service(
+                web::scope("/stream/{channelId}")
+                    .route("", web::get().to(get_stream))
+                    .route("/restart", web::post().to(restart_stream)),
+            )
     })
     .shutdown_timeout(SHUTDOWN_TIMEOUT)
     .bind(bind_address)?
