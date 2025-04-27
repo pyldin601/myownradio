@@ -41,6 +41,7 @@ pub(crate) fn spawn_ffmpeg_decoder(
         .arg("+bitexact")
         .arg("pipe:1")
         .stdout(Stdio::piped())
+        .stderr(Stdio::null())
         .spawn()?;
 
     let mut stdout = process.stdout.take().ok_or(DecoderError::NoStdout)?;
