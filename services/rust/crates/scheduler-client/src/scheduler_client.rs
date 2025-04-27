@@ -61,7 +61,7 @@ pub enum GetNowPlayingError {
     #[error(transparent)]
     RequestError(#[from] reqwest::Error),
     #[error("Channel {0} not found")]
-    ChannelNotFound(usize),
+    ChannelNotFound(u64),
     #[error("Unexpected response: {0:?}")]
     UnexpectedResponse(GetNowPlayingResponse),
 }
@@ -71,7 +71,7 @@ pub enum GetChannelInfoError {
     #[error(transparent)]
     RequestError(#[from] reqwest::Error),
     #[error("Channel {0} not found")]
-    ChannelNotFound(usize),
+    ChannelNotFound(u64),
     #[error("Unexpected response: {0:?}")]
     UnexpectedResponse(GetChannelInfoResponse),
 }
@@ -85,7 +85,7 @@ impl SchedulerClient {
 
     pub async fn get_now_playing(
         &self,
-        channel_id: &usize,
+        channel_id: &u64,
         time: &SystemTime,
     ) -> Result<NowPlaying, GetNowPlayingError> {
         let client = reqwest::Client::builder()
@@ -127,7 +127,7 @@ impl SchedulerClient {
 
     pub async fn get_channel_info(
         &self,
-        channel_id: &usize,
+        channel_id: &u64,
         client_id: Option<String>,
     ) -> Result<ChannelInfo, GetChannelInfoError> {
         let client = reqwest::Client::builder()

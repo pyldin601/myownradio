@@ -6,20 +6,20 @@ use std::process::Stdio;
 use std::time::Duration;
 use tracing::error;
 
-use crate::constants::SAMPLE_RATE;
+use crate::constants::{CHANNELS, SAMPLE_ENCODING, SAMPLE_FORMAT, SAMPLE_RATE};
 
 #[derive(thiserror::Error, Debug)]
-pub(crate) enum FfmpegError {
+pub(crate) enum DecoderError {
     #[error("Failed to spawn ffmpeg process: {0}")]
     IO(#[from] std::io::Error),
     #[error("Failed to open stdout")]
     NoStdout,
 }
 
-pub(crate) fn ffmpeg(
+pub(crate) fn spawn_ffmpeg_decoder(
     file: &str,
     position: &Duration,
-) -> Result<mpsc::Receiver<Bytes>, FfmpegError> {
+) -> Result<mpsc::Receiver<Bytes>, DecoderError> {
     let mut process = Command::new("ffmpeg")
         .arg("-ss")
         .arg(format!("{:.3}", position.as_secs_f64()))
@@ -30,20 +30,20 @@ pub(crate) fn ffmpeg(
         .arg("-map_metadata")
         .arg("-1")
         .arg("-c:a")
-        .arg("pcm_s16le")
+        .arg(SAMPLE_ENCODING)
         .arg("-ar")
         .arg(format!("{}", SAMPLE_RATE))
         .arg("-ac")
-        .arg("2")
+        .arg(format!("{}", CHANNELS))
         .arg("-f")
-        .arg("s16le")
+        .arg(SAMPLE_FORMAT)
         .arg("-fflags")
         .arg("+bitexact")
         .arg("pipe:1")
         .stdout(Stdio::piped())
         .spawn()?;
 
-    let mut stdout = process.stdout.take().ok_or_else(|| FfmpegError::NoStdout)?;
+    let mut stdout = process.stdout.take().ok_or(DecoderError::NoStdout)?;
 
     let (output_sink, output_src) = mpsc::channel(0);
 
