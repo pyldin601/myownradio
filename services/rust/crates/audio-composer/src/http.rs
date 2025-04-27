@@ -1,22 +1,23 @@
-use crate::composer::{compose_track, ComposeTrackEvent};
 use actix_web::{web, HttpResponse, Responder};
 use bytes::Bytes;
 use futures::channel::mpsc;
 use futures::{SinkExt, StreamExt};
 use scheduler_client::scheduler_client::SchedulerClient;
-use std::io;
-use std::time::SystemTime;
+use std::io::Error;
+use std::time::UNIX_EPOCH;
 
-pub(crate) async fn get_stream(
-    channel_id: web::Path<u64>,
+use crate::composer::{compose_track, ComposeTrackEvent};
+
+pub(crate) async fn get_audio_stream(
+    path_params: web::Path<(u64, u64)>,
     scheduler_client: web::Data<SchedulerClient>,
 ) -> impl Responder {
-    eprintln!("{:?}", channel_id);
+    let (channel_id, unix_time) = path_params.into_inner();
+    let clock_time = UNIX_EPOCH + std::time::Duration::from_millis(unix_time);
 
-    let now = SystemTime::now();
-    let (mut sink, src) = mpsc::channel(0);
+    let (mut output_sink, output_src) = mpsc::channel(0);
 
-    let mut events_src = match compose_track(&channel_id, &now, &scheduler_client).await {
+    let mut events_src = match compose_track(&channel_id, &clock_time, &scheduler_client).await {
         Ok(events) => events,
         Err(error) => return HttpResponse::InternalServerError().body(error.to_string()),
     };
@@ -26,7 +27,7 @@ pub(crate) async fn get_stream(
             match event {
                 ComposeTrackEvent::Start { .. } => {}
                 ComposeTrackEvent::Chunk { data, .. } => {
-                    if sink.send(data).await.is_err() {
+                    if output_sink.send(data).await.is_err() {
                         break;
                     }
                 }
@@ -35,9 +36,9 @@ pub(crate) async fn get_stream(
         }
     });
 
-    HttpResponse::Ok().streaming(src.map(Ok::<Bytes, io::Error>))
+    HttpResponse::Ok().streaming(output_src.map(Ok::<Bytes, Error>))
 }
 
-pub(crate) async fn restart_stream() -> impl Responder {
+pub(crate) async fn sync_audio_stream() -> impl Responder {
     HttpResponse::NotImplemented().finish()
 }
