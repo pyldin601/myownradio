@@ -69,19 +69,26 @@ pub(crate) fn compose_stream(
                                 output_sink
                                     .send(ComposeStreamEvent::TrackStart { title, url, pts })
                                     .await?;
+                                running_time.reset_pts();
                             }
-                            ComposeTrackEvent::Chunk { data, .. } => {
+                            ComposeTrackEvent::Chunk {
+                                data,
+                                pts: chunk_pts,
+                            } => {
                                 output_sink
                                     .send(ComposeStreamEvent::Chunk { data, pts })
                                     .await?;
+                                running_time.advance_by_next_pts(&chunk_pts);
                             }
                             ComposeTrackEvent::Eof { chunks, .. } if chunks == 0 => {
                                 running_time.advance_by_duration(&Duration::from_millis(100));
                                 break;
                             }
-                            ComposeTrackEvent::Eof { .. } => {
-                                let pts = running_time.time().clone();
-                                output_sink.send(ComposeStreamEvent::Eof { pts }).await?;
+                            ComposeTrackEvent::Eof {
+                                pts: last_chunk_pts,
+                                ..
+                            } => {
+                                running_time.advance_by_next_pts(&last_chunk_pts);
                                 break;
                             }
                         }
@@ -154,6 +161,7 @@ pub(crate) async fn compose_track(
 
         async move {
             let mut total_chunks = 0;
+            let mut chunk_offset = 0;
             let mut current_pts = Duration::ZERO;
 
             let run_loop = || async move {
@@ -166,13 +174,15 @@ pub(crate) async fn compose_track(
 
                 while let Some(chunk) = audio_src.next().await {
                     let chunk_len = chunk.len();
+                    chunk_offset += chunk_len;
                     sink.send(ComposeTrackEvent::Chunk {
                         pts: current_pts,
                         data: chunk,
                     })
                     .await?;
 
-                    let pts_after_chunk = chunk_len as f64 * BYTES_TO_PTS_MULTIPLIER;
+                    let pts_after_chunk =
+                        (chunk_offset + chunk_len) as f64 * BYTES_TO_PTS_MULTIPLIER;
                     current_pts = Duration::from_secs_f64(pts_after_chunk);
                     total_chunks += 1;
                 }
