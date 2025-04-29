@@ -16,6 +16,31 @@ pub(crate) enum DecoderError {
     NoStdout,
 }
 
+/// Spawns an `ffmpeg` process to decode audio from a file starting at a given position,
+/// returning a stream of raw PCM bytes through an `mpsc::Receiver`.
+///
+/// The decoder:
+/// - Seeks to the requested `position` in the file.
+/// - Outputs audio as signed 16-bit little-endian PCM (`s16le`) at 48 000 sample rate and 2 channels.
+/// - Strips any metadata from the output.
+/// - Writes the raw audio stream to stdout.
+///
+/// # Arguments
+///
+/// * `file` - Path to the audio file to decode.
+/// * `position` - Seek position (from start of file) to begin decoding.
+///
+/// # Returns
+///
+/// A `Result` containing:
+/// - `Ok(mpsc::Receiver<Bytes>)`: Stream of decoded audio bytes.
+/// - `Err(DecoderError)`: If spawning the process or accessing stdout fails.
+///
+/// # Example
+///
+/// ```no_run
+/// let receiver = spawn_ffmpeg_decoder("track.mp3", &Duration::from_secs(30)).unwrap();
+/// ```
 pub(crate) fn spawn_ffmpeg_decoder(
     file: &str,
     position: &Duration,
