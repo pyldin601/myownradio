@@ -1,6 +1,4 @@
-use crate::composer::{
-    compose_stream, compose_track, ComposeStreamEvent, ComposeTrackEvent, ComposerConfig,
-};
+use crate::composer::{compose_stream, ComposeStreamEvent, ComposerConfig};
 use actix_rt::time::Instant;
 use actix_web::{web, HttpResponse, Responder};
 use bytes::Bytes;
@@ -15,7 +13,7 @@ pub(crate) async fn get_audio_stream(
     scheduler_client: web::Data<SchedulerClient>,
 ) -> impl Responder {
     let (channel_id, unix_time) = path_params.into_inner();
-    let clock_time = UNIX_EPOCH + std::time::Duration::from_millis(unix_time);
+    let initial_time = UNIX_EPOCH + std::time::Duration::from_millis(unix_time);
 
     let (mut output_sink, output_src) = mpsc::channel(0);
 
@@ -23,7 +21,7 @@ pub(crate) async fn get_audio_stream(
         Clone::clone(&scheduler_client),
         ComposerConfig {
             channel_id,
-            initial_time: clock_time,
+            initial_time,
         },
     );
 
