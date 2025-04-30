@@ -2,7 +2,7 @@ use bytes::Bytes;
 use futures::{channel::mpsc, SinkExt, StreamExt};
 use scheduler_client::scheduler_client::{GetNowPlayingError, SchedulerClient};
 use std::time::{Duration, SystemTime};
-use tracing::error;
+use tracing::{debug, error};
 
 use crate::constants::BYTES_TO_PTS_MULTIPLIER;
 use crate::ffmpeg::{spawn_ffmpeg_decoder, DecoderError};
@@ -53,7 +53,7 @@ pub(crate) fn compose_stream(
 
                     let result = compose_track(&channel_id, &clock_time, &scheduler_client).await;
                     let mut track_events = match result {
-                        Ok(mut track_events) => track_events,
+                        Ok(track_events) => track_events,
                         Err(error) => {
                             output_sink
                                 .send(ComposeStreamEvent::Error { error })
@@ -99,7 +99,7 @@ pub(crate) fn compose_stream(
             };
 
             if let Err(error) = run_loop().await {
-                error!(?error, "Failed to run stream composing loop");
+                debug!(?error, "Stream composing loop has stopped");
             }
         }
     });
@@ -197,7 +197,7 @@ pub(crate) async fn compose_track(
             };
 
             if let Err(error) = run_loop().await {
-                error!(?error, "Failed to run loop");
+                debug!(?error, "Track composing loop has stopped");
             };
         }
     });
