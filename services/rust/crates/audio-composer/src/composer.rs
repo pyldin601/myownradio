@@ -174,7 +174,6 @@ pub(crate) async fn compose_track(
 
                 while let Some(chunk) = audio_src.next().await {
                     let chunk_len = chunk.len();
-                    chunk_offset += chunk_len;
                     sink.send(ComposeTrackEvent::Chunk {
                         pts: current_pts,
                         data: chunk,
@@ -185,6 +184,7 @@ pub(crate) async fn compose_track(
                         (chunk_offset + chunk_len) as f64 * BYTES_TO_PTS_MULTIPLIER;
                     current_pts = Duration::from_secs_f64(pts_after_chunk);
                     total_chunks += 1;
+                    chunk_offset += chunk_len;
                 }
 
                 sink.send(ComposeTrackEvent::Eof {
