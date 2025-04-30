@@ -5,15 +5,22 @@ use bytes::Bytes;
 use futures::channel::mpsc;
 use futures::{SinkExt, StreamExt};
 use scheduler_client::scheduler_client::SchedulerClient;
+use serde::Deserialize;
 use std::io::Error;
 use std::time::UNIX_EPOCH;
 
+#[derive(Deserialize)]
+pub(crate) struct GetAudioStreamQueryParams {
+    ts: u64,
+}
+
 pub(crate) async fn get_audio_stream(
-    path_params: web::Path<(u64, u64)>,
+    path: web::Path<u64>,
+    query: web::Query<GetAudioStreamQueryParams>,
     scheduler_client: web::Data<SchedulerClient>,
 ) -> impl Responder {
-    let (channel_id, unix_time) = path_params.into_inner();
-    let initial_time = UNIX_EPOCH + std::time::Duration::from_millis(unix_time);
+    let channel_id = path.into_inner();
+    let initial_time = UNIX_EPOCH + std::time::Duration::from_millis(query.ts);
 
     let (mut output_sink, output_src) = mpsc::channel(0);
 
@@ -47,8 +54,4 @@ pub(crate) async fn get_audio_stream(
     });
 
     HttpResponse::Ok().streaming(output_src.map(Ok::<Bytes, Error>))
-}
-
-pub(crate) async fn sync_audio_stream() -> impl Responder {
-    HttpResponse::NotImplemented().finish()
 }

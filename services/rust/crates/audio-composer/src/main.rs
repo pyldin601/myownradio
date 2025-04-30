@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::http::{get_audio_stream, sync_audio_stream};
+use crate::http::get_audio_stream;
 use actix_web::web;
 use actix_web::{App, HttpServer};
 use scheduler_client::scheduler_client::SchedulerClient;
@@ -25,10 +25,9 @@ async fn main() -> Result<(), std::io::Error> {
         App::new()
             .app_data(web::Data::new(config.clone()))
             .app_data(web::Data::new(scheduler_client.clone()))
-            .service(
-                web::scope("/channel/{channel_id}")
-                    .route("/get-audio/{unix_time}", web::get().to(get_audio_stream))
-                    .route("/sync", web::post().to(sync_audio_stream)),
+            .route(
+                "/channel/{channel_id}/get-audio",
+                web::get().to(get_audio_stream),
             )
     })
     .shutdown_timeout(SHUTDOWN_TIMEOUT)
