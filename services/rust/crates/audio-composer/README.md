@@ -16,6 +16,10 @@ the channel’s playlist.
 
 - `channelId` — Identifier for the radio channel to stream.
 
+#### Query Parameters
+
+- `ts` — Timestamp representing what time the listener should be hearing
+
 #### Example Usage
 
 ```bash
