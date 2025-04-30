@@ -7,7 +7,7 @@ channel. It relies on an external source that tells it exactly what track is pla
 
 ## Endpoints
 
-### `GET /stream/:channelId`
+### `GET /stream/:channelId/get-audio?ts=1746055098`
 
 Returns the composed audio stream in real time. This endpoint produces a raw audio stream, continuously generated from
 the channel’s playlist.
@@ -19,21 +19,5 @@ the channel’s playlist.
 #### Example Usage
 
 ```bash
-ffplay -nodisp http://localhost:8080/stream/1000
-```
-
-### `POST /stream/:channelId/restart`
-
-Triggers a restart of the composing loop for a specific radio channel.
-This is used when a user modifies a channel's playlist and needs the composing loop to restart in order to apply the
-updated content.
-
-#### Parameters
-
-- `channelId` — Identifier for the radio channel whose stream should be restarted.
-
-#### Example
-
-```bash
-curl -X POST http://localhost:8080/stream/1000/restart
+ffplay -nodisp -f s16le -ar 48000 -ch_layout stereo http://localhost:8080/channel/501/get-audio?ts=1745780368&pre=5000
 ```
