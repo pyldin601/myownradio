@@ -7,12 +7,14 @@ use futures::{SinkExt, StreamExt};
 use scheduler_client::scheduler_client::SchedulerClient;
 use serde::Deserialize;
 use std::io::Error;
-use std::time::UNIX_EPOCH;
+use std::time::{Duration, UNIX_EPOCH};
 use tracing::debug;
 
 #[derive(Deserialize)]
 pub(crate) struct GetAudioStreamQueryParams {
     ts: u64,
+    #[serde(default)]
+    pre: u64,
 }
 
 pub(crate) async fn get_audio_stream(
@@ -21,7 +23,8 @@ pub(crate) async fn get_audio_stream(
     scheduler_client: web::Data<SchedulerClient>,
 ) -> impl Responder {
     let channel_id = path.into_inner();
-    let initial_time = UNIX_EPOCH + std::time::Duration::from_millis(query.ts);
+    let initial_time = UNIX_EPOCH + Duration::from_millis(query.ts);
+    let preload_time = Duration::from_millis(query.pre);
 
     debug!(
         "Client connected. Channel: {}, Time: {:?}",
@@ -51,7 +54,7 @@ pub(crate) async fn get_audio_stream(
                         break;
                     }
 
-                    actix_rt::time::sleep_until(start_time + pts).await;
+                    actix_rt::time::sleep_until(start_time + pts - preload_time).await;
                 }
                 ComposeStreamEvent::Eof { .. } => {
                     debug!("End of stream. Channel: {}", channel_id);
