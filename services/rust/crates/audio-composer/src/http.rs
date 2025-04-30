@@ -8,6 +8,7 @@ use scheduler_client::scheduler_client::SchedulerClient;
 use serde::Deserialize;
 use std::io::Error;
 use std::time::UNIX_EPOCH;
+use tracing::debug;
 
 #[derive(Deserialize)]
 pub(crate) struct GetAudioStreamQueryParams {
@@ -21,6 +22,11 @@ pub(crate) async fn get_audio_stream(
 ) -> impl Responder {
     let channel_id = path.into_inner();
     let initial_time = UNIX_EPOCH + std::time::Duration::from_millis(query.ts);
+
+    debug!(
+        "Client connected. Channel: {}, Time: {:?}",
+        channel_id, initial_time
+    );
 
     let (mut output_sink, output_src) = mpsc::channel(0);
 
@@ -38,7 +44,7 @@ pub(crate) async fn get_audio_stream(
         while let Some(event) = events_src.next().await {
             match event {
                 ComposeStreamEvent::TrackStart { title, .. } => {
-                    println!("Starting track: {}", title);
+                    debug!("Now playing. Channel: {}, Title: {}", channel_id, title);
                 }
                 ComposeStreamEvent::Chunk { data, pts } => {
                     if output_sink.send(data).await.is_err() {
@@ -47,8 +53,12 @@ pub(crate) async fn get_audio_stream(
 
                     actix_rt::time::sleep_until(start_time + pts).await;
                 }
-                ComposeStreamEvent::Eof { .. } => {}
-                ComposeStreamEvent::Error { .. } => {}
+                ComposeStreamEvent::Eof { .. } => {
+                    debug!("End of stream. Channel: {}", channel_id);
+                }
+                ComposeStreamEvent::Error { error } => {
+                    debug!("Error. Channel: {}, Error: {}", channel_id, error);
+                }
             }
         }
     });
