@@ -18,7 +18,8 @@ the channel’s playlist.
 
 #### Query Parameters
 
-- `ts` — Timestamp representing what time the listener should be hearing
+- `ts` (required) — Timestamp representing what time the listener should be hearing
+- `pre` — How much audio (in milliseconds) should be buffered before playback starts
 
 #### Example Usage
 
