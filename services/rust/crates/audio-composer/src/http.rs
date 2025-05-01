@@ -7,7 +7,7 @@ use scheduler_client::scheduler_client::SchedulerClient;
 use serde::Deserialize;
 use std::io::Error;
 use std::time::{Duration, UNIX_EPOCH};
-use tracing::debug;
+use tracing::{debug, info};
 
 #[derive(Deserialize)]
 pub(crate) struct GetAudioStreamQueryParams {
@@ -25,7 +25,7 @@ pub(crate) async fn get_audio_stream(
     let initial_time = UNIX_EPOCH + Duration::from_millis(query.ts);
     let preload_time = Duration::from_millis(query.pre);
 
-    debug!("Client connected. Channel: {channel_id}, Time: {initial_time:?}");
+    info!("Client connected. Channel: {channel_id}, Time: {initial_time:?}");
 
     let (mut output_sink, output_src) = mpsc::channel(0);
 
@@ -39,6 +39,7 @@ pub(crate) async fn get_audio_stream(
 
     actix_rt::spawn(async move {
         let start_time = Instant::now();
+        let mut bytes_sent = 0;
 
         while let Some(event) = events_src.next().await {
             match event {
@@ -46,9 +47,11 @@ pub(crate) async fn get_audio_stream(
                     debug!("Now playing. Channel: {channel_id}, Title: {title}, Pts: {pts:?}");
                 }
                 ComposeStreamEvent::Chunk { data, pts } => {
+                    let data_len = data.len();
                     if output_sink.send(Ok::<_, Error>(data)).await.is_err() {
                         break;
                     }
+                    bytes_sent += data_len;
 
                     actix_rt::time::sleep_until(start_time + pts - preload_time).await;
                 }
@@ -60,6 +63,9 @@ pub(crate) async fn get_audio_stream(
                 }
             }
         }
+
+        let session_duration = start_time.elapsed();
+        info!("Client disconnected. Channel: {channel_id}, Duration: {session_duration:?}, Bytes sent: {bytes_sent}");
     });
 
     HttpResponse::Ok().streaming(output_src)
