@@ -147,7 +147,7 @@ pub(crate) async fn compose_track(
     scheduler_client: &SchedulerClient,
 ) -> Result<mpsc::Receiver<ComposeTrackEvent>, ComposeTrackError> {
     let now_playing = scheduler_client
-        .get_now_playing(channel_id, clock_time)
+        .get_playing_at(channel_id, clock_time)
         .await?;
 
     let (output_sink, output_src) = mpsc::channel(0);

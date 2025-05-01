@@ -59,7 +59,7 @@ pub(crate) async fn get_audio_stream(
                     debug!("end of stream. channel: {channel_id}, pts: {pts:?}");
                 }
                 ComposeStreamEvent::Error { error, pts } => {
-                    debug!("error. channel: {channel_id}, error: {error}, pts: {pts:?}");
+                    debug!("error. channel: {channel_id}, error: {error:?}, pts: {pts:?}");
                 }
             }
         }
