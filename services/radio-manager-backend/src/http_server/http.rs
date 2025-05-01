@@ -1,7 +1,8 @@
 use crate::http_server::handlers::{
-    forward_auth, internal_egress_process, internal_radio_streamer, public_auth_v0,
-    public_schedule, public_streams, user_audio_stream, user_audio_tracks, user_audio_tracks_v2,
-    user_outgoing_stream, user_stream_control, user_stream_destinations, user_streams,
+    forward_auth, internal_audio_composer, internal_egress_process, internal_radio_streamer,
+    public_auth_v0, public_schedule, public_streams, user_audio_stream, user_audio_tracks,
+    user_audio_tracks_v2, user_outgoing_stream, user_stream_control, user_stream_destinations,
+    user_streams,
 };
 use crate::pubsub_client::PubsubClient;
 use crate::services::auth::{AuthService, AuthTokenService};
@@ -176,6 +177,10 @@ pub(crate) fn run_server<FS: FileSystem + Send + Sync + Clone + 'static>(
                         web::post().to(internal_egress_process::handle_stream_error),
                     ),
             )
+            .service(web::scope("/internal/audio-composer").route(
+                "/channel/{channel_id}/playing-at/{unix_time}",
+                web::get().to(internal_audio_composer::get_playing_at),
+            ))
             .service(
                 web::scope("/v0/destinations")
                     .route(
