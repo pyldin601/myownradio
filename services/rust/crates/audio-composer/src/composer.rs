@@ -24,9 +24,6 @@ pub(crate) enum ComposeStreamEvent {
         pts: Duration,
         data: Bytes,
     },
-    Eof {
-        pts: Duration,
-    },
     Error {
         pts: Duration,
         error: ComposeTrackError,
@@ -116,29 +113,13 @@ pub(crate) enum ComposeTrackError {
 
     #[error("Failed to decode audio")]
     DecoderError(#[from] DecoderError),
-
-    #[error("Playback was stopped")]
-    Stopped,
-
-    #[error("Unable to read source audio")]
-    UnreadableSource,
 }
 
 #[derive(Debug)]
 pub(crate) enum ComposeTrackEvent {
-    Start {
-        pts: Duration,
-        title: String,
-        url: String,
-    },
-    Chunk {
-        pts: Duration,
-        data: Bytes,
-    },
-    Eof {
-        pts: Duration,
-        chunks: u64,
-    },
+    Start { title: String, url: String },
+    Chunk { pts: Duration, data: Bytes },
+    Eof { pts: Duration, chunks: u64 },
 }
 
 pub(crate) async fn compose_track(
@@ -168,7 +149,6 @@ pub(crate) async fn compose_track(
 
             let run_loop = || async move {
                 sink.send(ComposeTrackEvent::Start {
-                    pts: Duration::ZERO,
                     title: now_playing.current_track.title.clone(),
                     url: now_playing.current_track.url.clone(),
                 })
