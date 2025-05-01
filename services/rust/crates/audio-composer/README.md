@@ -7,7 +7,7 @@ channel. It relies on an external source that tells it exactly what track is pla
 
 ## Endpoints
 
-### `GET /stream/:channelId/get-audio?ts=1746055098`
+### `GET /channel/:channelId/get-audio?ts=1746055098`
 
 Returns the composed audio stream in real time. This endpoint produces a raw audio stream, continuously generated from
 the channel’s playlist.
