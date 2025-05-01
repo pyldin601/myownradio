@@ -2,6 +2,7 @@ extern crate serde_millis;
 
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use serde_repr::Deserialize_repr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
@@ -16,32 +17,18 @@ pub struct CurrentTrack {
     pub duration: Duration,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
-pub struct NextTrack {
-    pub title: String,
-    pub url: String,
-    #[serde(with = "serde_millis")]
-    pub duration: Duration,
+#[derive(Debug, Deserialize_repr)]
+#[repr(u8)]
+pub enum PlaybackStatus {
+    Stopped = 0,
+    Playing = 1,
+    Paused = 2,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct NowPlaying {
-    pub playlist_position: usize,
-    pub current_track: CurrentTrack,
-    pub next_track: NextTrack,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct GetNowPlayingResponse {
-    pub code: u8,
-    pub message: String,
-    pub data: NowPlaying,
-}
-
-#[derive(Deserialize, Debug, Clone)]
 pub struct ChannelInfo {
     pub name: String,
-    pub status: u8,
+    pub status: PlaybackStatus,
 }
 
 #[derive(Deserialize, Debug)]
@@ -51,19 +38,15 @@ pub struct GetChannelInfoResponse {
     pub data: Option<ChannelInfo>,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct GetPlayingAtResponse {
+    pub playback_status: PlaybackStatus,
+    pub current_track: CurrentTrack,
+}
+
 #[derive(Clone)]
 pub struct SchedulerClient {
     scheduler_endpoint: String,
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum GetNowPlayingError {
-    #[error(transparent)]
-    RequestError(#[from] reqwest::Error),
-    #[error("Channel {0} not found")]
-    ChannelNotFound(u64),
-    #[error("Unexpected response: {0:?}")]
-    UnexpectedResponse(GetNowPlayingResponse),
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -76,53 +59,19 @@ pub enum GetChannelInfoError {
     UnexpectedResponse(GetChannelInfoResponse),
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum GetPlayingAtError {
+    #[error(transparent)]
+    RequestError(#[from] reqwest::Error),
+    #[error("Channel {0} not found")]
+    ChannelNotFound(u64),
+}
+
 impl SchedulerClient {
     pub fn new(scheduler_endpoint: &str) -> Self {
         let scheduler_endpoint = scheduler_endpoint.to_string();
 
         Self { scheduler_endpoint }
-    }
-
-    pub async fn get_now_playing(
-        &self,
-        channel_id: &u64,
-        time: &SystemTime,
-    ) -> Result<NowPlaying, GetNowPlayingError> {
-        let client = reqwest::Client::builder()
-            .timeout(REQUEST_TIMEOUT)
-            .build()
-            .expect("Unable to initialize HTTP client");
-
-        let unix_time = time.duration_since(UNIX_EPOCH).unwrap().as_millis();
-
-        let url = format!(
-            "{}/internal/radio-streamer/v0/streams/{}/playing-at/{}",
-            &self.scheduler_endpoint, channel_id, &unix_time,
-        );
-
-        let response: GetNowPlayingResponse = client
-            .get(url)
-            .send()
-            .await?
-            .error_for_status()
-            .map_err(|error| {
-                if matches!(error.status(), Some(StatusCode::NOT_FOUND)) {
-                    GetNowPlayingError::ChannelNotFound(*channel_id)
-                } else {
-                    error.into()
-                }
-            })?
-            .json()
-            .await?;
-
-        match response {
-            GetNowPlayingResponse {
-                code,
-                message,
-                data,
-            } if (code == 1 && message == "OK") => Ok(data),
-            GetNowPlayingResponse { .. } => Err(GetNowPlayingError::UnexpectedResponse(response)),
-        }
     }
 
     pub async fn get_channel_info(
@@ -173,5 +122,40 @@ impl SchedulerClient {
             } if (code == 1 && message == "OK") => Ok(data),
             GetChannelInfoResponse { .. } => Err(GetChannelInfoError::UnexpectedResponse(response)),
         }
+    }
+
+    pub async fn get_playing_at(
+        &self,
+        channel_id: &u64,
+        time: &SystemTime,
+    ) -> Result<GetPlayingAtResponse, GetPlayingAtError> {
+        let client = reqwest::Client::builder()
+            .timeout(REQUEST_TIMEOUT)
+            .build()
+            .expect("Unable to initialize HTTP client");
+
+        let unix_time = time.duration_since(UNIX_EPOCH).unwrap().as_millis();
+
+        let url = format!(
+            "{}/internal/audio-composer/channel/{}/playing-at/{}",
+            &self.scheduler_endpoint, channel_id, &unix_time,
+        );
+
+        let response = client
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()
+            .map_err(|error| {
+                if matches!(error.status(), Some(StatusCode::NOT_FOUND)) {
+                    GetPlayingAtError::ChannelNotFound(*channel_id)
+                } else {
+                    error.into()
+                }
+            })?
+            .json()
+            .await?;
+
+        Ok(response)
     }
 }

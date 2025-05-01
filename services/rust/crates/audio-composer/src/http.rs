@@ -55,11 +55,8 @@ pub(crate) async fn get_audio_stream(
 
                     actix_rt::time::sleep_until(start_time + pts - preload_time).await;
                 }
-                ComposeStreamEvent::Eof { pts } => {
-                    debug!("end of stream. channel: {channel_id}, pts: {pts:?}");
-                }
                 ComposeStreamEvent::Error { error, pts } => {
-                    debug!("error. channel: {channel_id}, error: {error}, pts: {pts:?}");
+                    debug!("error. channel: {channel_id}, error: {error:?}, pts: {pts:?}");
                 }
             }
         }

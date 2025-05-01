@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use futures::{channel::mpsc, SinkExt, StreamExt};
-use scheduler_client::scheduler_client::{GetNowPlayingError, SchedulerClient};
+use scheduler_client::scheduler_client::{GetPlayingAtError, SchedulerClient};
 use std::time::{Duration, SystemTime};
 use tracing::{debug, error};
 
@@ -23,9 +23,6 @@ pub(crate) enum ComposeStreamEvent {
     Chunk {
         pts: Duration,
         data: Bytes,
-    },
-    Eof {
-        pts: Duration,
     },
     Error {
         pts: Duration,
@@ -112,33 +109,17 @@ pub(crate) fn compose_stream(
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum ComposeTrackError {
     #[error("Failed to get now playing")]
-    NowPlayingError(#[from] GetNowPlayingError),
+    NowPlayingError(#[from] GetPlayingAtError),
 
     #[error("Failed to decode audio")]
     DecoderError(#[from] DecoderError),
-
-    #[error("Playback was stopped")]
-    Stopped,
-
-    #[error("Unable to read source audio")]
-    UnreadableSource,
 }
 
 #[derive(Debug)]
 pub(crate) enum ComposeTrackEvent {
-    Start {
-        pts: Duration,
-        title: String,
-        url: String,
-    },
-    Chunk {
-        pts: Duration,
-        data: Bytes,
-    },
-    Eof {
-        pts: Duration,
-        chunks: u64,
-    },
+    Start { title: String, url: String },
+    Chunk { pts: Duration, data: Bytes },
+    Eof { pts: Duration, chunks: u64 },
 }
 
 pub(crate) async fn compose_track(
@@ -147,7 +128,7 @@ pub(crate) async fn compose_track(
     scheduler_client: &SchedulerClient,
 ) -> Result<mpsc::Receiver<ComposeTrackEvent>, ComposeTrackError> {
     let now_playing = scheduler_client
-        .get_now_playing(channel_id, clock_time)
+        .get_playing_at(channel_id, clock_time)
         .await?;
 
     let (output_sink, output_src) = mpsc::channel(0);
@@ -168,7 +149,6 @@ pub(crate) async fn compose_track(
 
             let run_loop = || async move {
                 sink.send(ComposeTrackEvent::Start {
-                    pts: Duration::ZERO,
                     title: now_playing.current_track.title.clone(),
                     url: now_playing.current_track.url.clone(),
                 })
