@@ -25,7 +25,7 @@ pub(crate) async fn get_audio_stream(
     let initial_time = UNIX_EPOCH + Duration::from_millis(query.ts);
     let preload_time = Duration::from_millis(query.pre);
 
-    info!("Client connected. Channel: {channel_id}, Time: {initial_time:?}");
+    info!("client connected. channel: {channel_id}, time: {initial_time:?}");
 
     let (mut output_sink, output_src) = mpsc::channel(0);
 
@@ -44,7 +44,7 @@ pub(crate) async fn get_audio_stream(
         while let Some(event) = events_src.next().await {
             match event {
                 ComposeStreamEvent::TrackStart { title, pts, .. } => {
-                    debug!("Now playing. Channel: {channel_id}, Title: {title}, Pts: {pts:?}");
+                    debug!("now playing. channel: {channel_id}, title: {title}, pts: {pts:?}");
                 }
                 ComposeStreamEvent::Chunk { data, pts } => {
                     let data_len = data.len();
@@ -56,16 +56,16 @@ pub(crate) async fn get_audio_stream(
                     actix_rt::time::sleep_until(start_time + pts - preload_time).await;
                 }
                 ComposeStreamEvent::Eof { pts } => {
-                    debug!("End of stream. Channel: {channel_id}, Pts: {pts:?}");
+                    debug!("end of stream. channel: {channel_id}, pts: {pts:?}");
                 }
                 ComposeStreamEvent::Error { error, pts } => {
-                    debug!("Error. Channel: {channel_id}, Error: {error}, Pts: {pts:?}");
+                    debug!("error. channel: {channel_id}, error: {error}, pts: {pts:?}");
                 }
             }
         }
 
         let session_duration = start_time.elapsed();
-        info!("Client disconnected. Channel: {channel_id}, Duration: {session_duration:?}, Bytes sent: {bytes_sent}");
+        info!("client disconnected. channel: {channel_id}, duration: {session_duration:?}, bytes sent: {bytes_sent}");
     });
 
     HttpResponse::Ok().streaming(output_src)

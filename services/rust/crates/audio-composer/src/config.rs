@@ -10,7 +10,7 @@ impl Config {
     pub(crate) fn from_env() -> Self {
         match envy::from_env::<Self>() {
             Ok(config) => config,
-            Err(error) => panic!("Missing environment variable: {:#?}", error),
+            Err(error) => panic!("missing environment variable: {:#?}", error),
         }
     }
 }

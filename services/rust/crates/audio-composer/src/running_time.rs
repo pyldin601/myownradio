@@ -36,7 +36,7 @@ impl RunningTime {
         if let Some(prev_pts) = &self.previous_pts {
             if prev_pts >= next_pts {
                 warn!(
-                    "Backward-going timestamps detected: prev_pts = {:?}, next_pts = {:?}",
+                    "backward-going timestamps detected: prev_pts = {:?}, next_pts = {:?}",
                     prev_pts, next_pts,
                 );
             }
@@ -55,7 +55,7 @@ impl RunningTime {
     /// by a specific duration. The `duration` parameter should represent the
     /// time interval to be added to the current running time.
     pub(crate) fn advance_by_duration(&mut self, duration: &Duration) {
-        debug!("Advance by {:?}", duration);
+        debug!("advance by {:?}", duration);
 
         self.time += *duration;
         self.previous_pts = None;
@@ -66,7 +66,7 @@ impl RunningTime {
     /// This method should be called if the next incoming frame is expected
     /// to have a timestamp value of `Duration::ZERO`.
     pub(crate) fn reset_pts(&mut self) {
-        debug!("Reset previous pts");
+        debug!("reset previous pts");
 
         self.previous_pts = None;
     }

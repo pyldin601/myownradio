@@ -101,7 +101,7 @@ pub(crate) fn compose_stream(
             };
 
             if let Err(error) = run_loop().await {
-                debug!(?error, "Stream composing loop has stopped");
+                debug!(?error, "stream composing loop has stopped");
             }
         }
     });
@@ -199,7 +199,7 @@ pub(crate) async fn compose_track(
             };
 
             if let Err(error) = run_loop().await {
-                debug!(?error, "Track composing loop has stopped");
+                debug!(?error, "track composing loop has stopped");
             };
         }
     });

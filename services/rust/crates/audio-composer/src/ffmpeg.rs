@@ -81,7 +81,7 @@ pub(crate) fn spawn_ffmpeg_decoder(
             let bytes_read = match stdout.read(&mut buffer).await {
                 Ok(bytes_read) => bytes_read,
                 Err(error) => {
-                    error!(?error, "Error reading from ffmpeg");
+                    error!(?error, "error reading from ffmpeg");
                     break;
                 }
             };

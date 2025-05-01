@@ -3,6 +3,7 @@ use crate::http::get_audio_stream;
 use actix_web::web;
 use actix_web::{App, HttpServer};
 use scheduler_client::scheduler_client::SchedulerClient;
+use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 mod composer;
@@ -36,8 +37,10 @@ async fn main() -> Result<(), std::io::Error> {
             )
     })
     .shutdown_timeout(SHUTDOWN_TIMEOUT)
-    .bind(bind_address)?
+    .bind(bind_address.clone())?
     .run();
+
+    info!("server is listening on: {bind_address}");
 
     server.await
 }
