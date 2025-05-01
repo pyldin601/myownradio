@@ -1,6 +1,5 @@
 import makeDebug from 'debug'
 import { appendBuffer } from '@/utils/audio'
-import { getWorldTime } from '@/api/time'
 import { AudioFormat, getNowPlaying, getTrackTranscodeStream } from '@/api'
 import { sleep } from '@/utils/sleep'
 import { makeChunkTransform } from './BufferUtils'
@@ -52,9 +51,8 @@ export const composeStreamMediaSource = (channelId: number, opts: Options) => {
 
     try {
       const startTimeMillis = performance.now()
-      const { unixtime: startUnixtime } = await getWorldTime()
 
-      let streamTimeMillis = startUnixtime * 1000
+      let streamTimeMillis = Date.now()
 
       while (true) {
         const nowPlaying = await getNowPlaying(channelId, streamTimeMillis)
