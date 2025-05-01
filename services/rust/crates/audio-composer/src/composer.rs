@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use futures::{channel::mpsc, SinkExt, StreamExt};
-use scheduler_client::scheduler_client::{GetNowPlayingError, SchedulerClient};
+use scheduler_client::scheduler_client::{GetPlayingAtError, SchedulerClient};
 use std::time::{Duration, SystemTime};
 use tracing::{debug, error};
 
@@ -112,7 +112,7 @@ pub(crate) fn compose_stream(
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum ComposeTrackError {
     #[error("Failed to get now playing")]
-    NowPlayingError(#[from] GetNowPlayingError),
+    NowPlayingError(#[from] GetPlayingAtError),
 
     #[error("Failed to decode audio")]
     DecoderError(#[from] DecoderError),
