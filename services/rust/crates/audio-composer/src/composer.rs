@@ -28,6 +28,7 @@ pub(crate) enum ComposeStreamEvent {
         pts: Duration,
     },
     Error {
+        pts: Duration,
         error: ComposeTrackError,
     },
 }
@@ -55,10 +56,11 @@ pub(crate) fn compose_stream(
                     let mut track_events = match result {
                         Ok(track_events) => track_events,
                         Err(error) => {
+                            let pts = running_time.time().clone();
                             output_sink
-                                .send(ComposeStreamEvent::Error { error })
+                                .send(ComposeStreamEvent::Error { error, pts })
                                 .await?;
-                            continue;
+                            break;
                         }
                     };
 

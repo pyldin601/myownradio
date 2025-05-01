@@ -1,7 +1,6 @@
 use crate::composer::{compose_stream, ComposeStreamEvent, ComposerConfig};
 use actix_rt::time::Instant;
 use actix_web::{web, HttpResponse, Responder};
-use bytes::Bytes;
 use futures::channel::mpsc;
 use futures::{SinkExt, StreamExt};
 use scheduler_client::scheduler_client::SchedulerClient;
@@ -26,10 +25,7 @@ pub(crate) async fn get_audio_stream(
     let initial_time = UNIX_EPOCH + Duration::from_millis(query.ts);
     let preload_time = Duration::from_millis(query.pre);
 
-    debug!(
-        "Client connected. Channel: {}, Time: {:?}",
-        channel_id, initial_time
-    );
+    debug!("Client connected. Channel: {channel_id}, Time: {initial_time:?}");
 
     let (mut output_sink, output_src) = mpsc::channel(0);
 
@@ -46,25 +42,25 @@ pub(crate) async fn get_audio_stream(
 
         while let Some(event) = events_src.next().await {
             match event {
-                ComposeStreamEvent::TrackStart { title, .. } => {
-                    debug!("Now playing. Channel: {}, Title: {}", channel_id, title);
+                ComposeStreamEvent::TrackStart { title, pts, .. } => {
+                    debug!("Now playing. Channel: {channel_id}, Title: {title}, Pts: {pts:?}");
                 }
                 ComposeStreamEvent::Chunk { data, pts } => {
-                    if output_sink.send(data).await.is_err() {
+                    if output_sink.send(Ok::<_, Error>(data)).await.is_err() {
                         break;
                     }
 
                     actix_rt::time::sleep_until(start_time + pts - preload_time).await;
                 }
-                ComposeStreamEvent::Eof { .. } => {
-                    debug!("End of stream. Channel: {}", channel_id);
+                ComposeStreamEvent::Eof { pts } => {
+                    debug!("End of stream. Channel: {channel_id}, Pts: {pts:?}");
                 }
-                ComposeStreamEvent::Error { error } => {
-                    debug!("Error. Channel: {}, Error: {}", channel_id, error);
+                ComposeStreamEvent::Error { error, pts } => {
+                    debug!("Error. Channel: {channel_id}, Error: {error}, Pts: {pts:?}");
                 }
             }
         }
     });
 
-    HttpResponse::Ok().streaming(output_src.map(Ok::<Bytes, Error>))
+    HttpResponse::Ok().streaming(output_src)
 }
