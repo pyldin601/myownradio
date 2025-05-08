@@ -1,34 +1,13 @@
 use crate::entities::stream::StreamRow;
 use crate::mysql_client::MySqlClient;
 use crate::response::Response;
-use crate::{query_builder, response};
+use crate::{query_builder_from_fields, response};
 use actix_web::{web, HttpResponse, Responder};
 use sqlx::{MySql, QueryBuilder};
 use std::ops::DerefMut;
 
 fn create_builder<'a>() -> QueryBuilder<'a, MySql> {
-    query_builder!(
-        "r_streams",
-        [
-            sid,
-            uid,
-            name,
-            permalink,
-            info,
-            jingle_interval,
-            status,
-            started,
-            started_from,
-            access,
-            category,
-            hashtags,
-            cover,
-            cover_background,
-            created,
-            rtmp_url,
-            rtmp_streaming_key
-        ]
-    )
+    query_builder_from_fields!("r_streams", StreamRow::select_fields())
 }
 
 pub(crate) async fn list_user_channels(

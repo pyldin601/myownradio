@@ -1767,6 +1767,7 @@ dependencies = [
  "dotenvy 0.15.7 (git+https://github.com/allan2/dotenvy.git)",
  "envy",
  "futures",
+ "select-fields-derive",
  "serde",
  "serde_millis",
  "serde_repr",
@@ -2425,6 +2426,15 @@ checksum = "49db231d56a190491cb4aeda9527f1ad45345af50b0851622a7adb8c03b01c32"
 dependencies = [
  "core-foundation-sys",
  "libc",
+]
+
+[[package]]
+name = "select-fields-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

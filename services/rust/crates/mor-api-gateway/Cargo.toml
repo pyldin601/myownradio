@@ -17,3 +17,4 @@ chrono = { version = "0.4.41", features = ["serde"] }
 envy = { version = "0.4.2" }
 dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
 thiserror = "2.0.12"
+select-fields-derive = { path = "../select-fields-derive" }
