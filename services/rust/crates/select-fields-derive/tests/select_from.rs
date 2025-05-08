@@ -10,7 +10,6 @@ struct TestStruct {
 
 #[test]
 fn test_select_from_output() {
-    let c = TestStruct::select_from();
     assert_eq!(
         TestStruct::select_from(),
         "SELECT `test`.`id`, `test`.`name`, `test`.`active` FROM `test`"
