@@ -3,7 +3,7 @@ use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
 #[proc_macro_derive(SelectFields)]
-pub fn derive_select_fields(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn derive_select_fields(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let struct_name = input.ident;
 
