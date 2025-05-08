@@ -1,4 +1,4 @@
-use select_fields_derive::{SelectFields, SelectFrom};
+use select_fields_derive::SelectFrom;
 use serde::Serialize;
 use serde_repr::Serialize_repr;
 
