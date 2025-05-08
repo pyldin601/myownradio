@@ -44,9 +44,9 @@ pub(crate) async fn list_user_channels(
     builder.push_bind(user_id);
 
     let query = builder.build_query_as::<StreamRow>();
-    let streams = query.fetch_all(connection.deref_mut()).await?;
+    let channels = query.fetch_all(connection.deref_mut()).await?;
 
-    Ok(HttpResponse::Ok().json(streams))
+    Ok(HttpResponse::Ok().json(channels))
 }
 
 pub(crate) async fn get_user_channel(
