@@ -13,7 +13,7 @@ pub(crate) enum StreamStatus {
 #[derive(sqlx::FromRow, Clone, Serialize, SelectFrom)]
 #[select_from("r_streams")]
 #[allow(dead_code)]
-pub(crate) struct StreamRow {
+pub(crate) struct Channel {
     #[serde(rename = "id")]
     pub(crate) sid: i64,
     #[serde(skip)]

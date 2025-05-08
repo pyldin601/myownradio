@@ -1,4 +1,4 @@
-use crate::entities::stream::StreamRow;
+use crate::entities::channel::Channel;
 use crate::mysql_client::MySqlClient;
 use crate::response;
 use actix_web::{web, HttpResponse, Responder};
@@ -6,7 +6,7 @@ use sqlx::{MySql, QueryBuilder};
 use std::ops::DerefMut;
 
 fn create_builder<'a>() -> QueryBuilder<'a, MySql> {
-    QueryBuilder::new(StreamRow::select_from())
+    QueryBuilder::new(Channel::select_from())
 }
 
 pub(crate) async fn list_user_channels(
@@ -21,7 +21,7 @@ pub(crate) async fn list_user_channels(
     builder.push("WHERE `r_streams`.`uid` = ");
     builder.push_bind(user_id);
 
-    let query = builder.build_query_as::<StreamRow>();
+    let query = builder.build_query_as::<Channel>();
     let channels = query.fetch_all(connection.deref_mut()).await?;
 
     Ok(HttpResponse::Ok().json(channels))
@@ -41,7 +41,7 @@ pub(crate) async fn get_user_channel(
     builder.push(" AND `r_streams`.`sid` = ");
     builder.push_bind(channel_id);
 
-    let query = builder.build_query_as::<StreamRow>();
+    let query = builder.build_query_as::<Channel>();
     let channel = query
         .fetch_optional(connection.deref_mut())
         .await?
