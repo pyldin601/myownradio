@@ -1,4 +1,4 @@
-use select_fields_derive::SelectFields;
+use select_fields_derive::{SelectFields, SelectFrom};
 use serde::Serialize;
 use serde_repr::Serialize_repr;
 
@@ -10,7 +10,9 @@ pub(crate) enum StreamStatus {
     Paused = 2,
 }
 
-#[derive(sqlx::FromRow, Clone, Serialize, SelectFields)]
+#[derive(sqlx::FromRow, Clone, Serialize, SelectFrom)]
+#[select_from("r_streams")]
+#[allow(dead_code)]
 pub(crate) struct StreamRow {
     #[serde(rename = "id")]
     pub(crate) sid: i64,

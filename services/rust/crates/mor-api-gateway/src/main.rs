@@ -5,7 +5,6 @@ use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-mod builder;
 mod config;
 mod entities;
 mod mysql_client;

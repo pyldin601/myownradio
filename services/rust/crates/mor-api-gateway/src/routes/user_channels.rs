@@ -1,19 +1,18 @@
 use crate::entities::stream::StreamRow;
 use crate::mysql_client::MySqlClient;
-use crate::response::Response;
-use crate::{query_builder_from_fields, response};
+use crate::response;
 use actix_web::{web, HttpResponse, Responder};
 use sqlx::{MySql, QueryBuilder};
 use std::ops::DerefMut;
 
 fn create_builder<'a>() -> QueryBuilder<'a, MySql> {
-    query_builder_from_fields!("r_streams", StreamRow::select_fields())
+    QueryBuilder::new(StreamRow::select_from())
 }
 
 pub(crate) async fn list_user_channels(
     user_id: web::Path<i64>,
     mysql_client: web::Data<MySqlClient>,
-) -> Response {
+) -> response::Response {
     let user_id = user_id.into_inner();
     let mut connection = mysql_client.connection().await?;
 
@@ -31,7 +30,7 @@ pub(crate) async fn list_user_channels(
 pub(crate) async fn get_user_channel(
     path: web::Path<(i64, i64)>,
     mysql_client: web::Data<MySqlClient>,
-) -> Response {
+) -> response::Response {
     let (user_id, channel_id) = path.into_inner();
     let mut connection = mysql_client.connection().await?;
 
