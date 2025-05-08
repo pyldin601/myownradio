@@ -52,7 +52,6 @@ pub fn derive_select(input: TokenStream) -> TokenStream {
     }
 
     let table = table_name.expect("Missing #[select_from(\"...\")] attribute");
-    let table_lit = syn::LitStr::new(&table, proc_macro2::Span::call_site());
 
     // Extract named fields
     let fields = match input.data {
