@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::db::DbPool;
-use crate::routes::channels;
+use crate::routes::{channel_tracks, channels};
+use actix_web::http::Method;
 use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
@@ -46,6 +47,22 @@ async fn main() -> std::io::Result<()> {
                                 .get(channels::get_channel)
                                 .put(channels::update_channel)
                                 .delete(channels::delete_channel),
+                        )
+                        .service(
+                            web::scope("/{channelId}/tracks")
+                                .service(
+                                    web::resource("")
+                                        .get(channel_tracks::list_tracks)
+                                        .post(channel_tracks::add_track),
+                                )
+                                .service(
+                                    web::resource("/{trackId}")
+                                        .delete(channel_tracks::delete_track),
+                                )
+                                .service(
+                                    web::resource("/{trackId}/reorder")
+                                        .route(web::post().to(channel_tracks::reorder_track)),
+                                ),
                         ),
                 ),
             )
