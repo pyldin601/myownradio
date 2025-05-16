@@ -9,7 +9,6 @@ use serde::Serialize;
 pub(crate) struct Channel {
     #[diesel(column_name = "sid")]
     pub(crate) id: i32,
-    #[serde(skip_serializing)]
     #[diesel(column_name = "uid")]
     pub(crate) user_id: i32,
     pub(crate) name: String,
