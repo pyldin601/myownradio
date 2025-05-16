@@ -1,13 +1,12 @@
 use crate::config::Config;
-use crate::mysql_client::MySqlClient;
+use crate::db::DbPool;
 use crate::routes::user_channels;
 use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 mod config;
-mod entities;
-mod mysql_client;
+mod db;
 mod response;
 mod routes;
 
@@ -21,16 +20,19 @@ async fn main() -> std::io::Result<()> {
         .init();
 
     let config = Config::from_env();
-    let mysql_client = MySqlClient::new(&config.mysql)
-        .await
-        .expect("Unable to initialize MySQL client");
+    let db_pool = DbPool::create(
+        &config.mysql.user,
+        &config.mysql.password,
+        &config.mysql.host,
+        &config.mysql.database,
+    );
 
     let bind_address = config.bind_address.clone();
 
     let server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(config.clone()))
-            .app_data(web::Data::new(mysql_client.clone()))
+            .app_data(web::Data::new(db_pool.clone()))
             .service(
                 web::scope("/users/{userId}").service(
                     web::scope("/channels")

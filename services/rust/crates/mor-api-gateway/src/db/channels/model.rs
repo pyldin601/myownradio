@@ -1,32 +1,26 @@
-use select_fields_derive::SelectFrom;
+use crate::db::schema::r_streams;
+use diesel::{Queryable, Selectable};
 use serde::Serialize;
-use serde_repr::Serialize_repr;
 
-#[derive(sqlx::Type, Clone, Serialize_repr)]
-#[repr(i64)]
-pub(crate) enum StreamStatus {
-    Stopped = 0,
-    Playing = 1,
-    Paused = 2,
-}
-
-#[derive(sqlx::FromRow, Clone, Serialize, SelectFrom)]
-#[select_from("r_streams")]
+#[derive(Clone, Serialize, Selectable, Queryable)]
+#[diesel(table_name = r_streams)]
+#[diesel(check_for_backend(diesel::mysql::Mysql))]
 #[allow(dead_code)]
 pub(crate) struct Channel {
-    #[serde(rename = "id")]
-    pub(crate) sid: i64,
-    #[serde(skip)]
-    pub(crate) uid: i64,
+    #[diesel(column_name = "sid")]
+    pub(crate) id: i32,
+    #[serde(skip_serializing)]
+    #[diesel(column_name = "uid")]
+    pub(crate) user_id: i32,
     pub(crate) name: String,
     pub(crate) permalink: Option<String>,
     pub(crate) info: String,
-    pub(crate) jingle_interval: i64,
-    pub(crate) status: StreamStatus,
+    pub(crate) jingle_interval: i32,
+    pub(crate) status: i32,
     pub(crate) started: Option<i64>,
     pub(crate) started_from: Option<i64>,
     pub(crate) access: String,
-    pub(crate) category: Option<i64>,
+    pub(crate) category: Option<i32>,
     pub(crate) hashtags: String,
     pub(crate) cover: Option<String>,
     pub(crate) cover_background: Option<String>,

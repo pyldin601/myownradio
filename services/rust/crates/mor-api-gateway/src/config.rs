@@ -12,15 +12,6 @@ pub(crate) struct MySqlConfig {
     pub(crate) database: String,
 }
 
-impl MySqlConfig {
-    pub(crate) fn connection_string(&self) -> String {
-        format!(
-            "mysql://{}:{}@{}/{}",
-            self.user, self.password, self.host, self.database
-        )
-    }
-}
-
 #[derive(Clone, Debug, Deserialize)]
 pub(crate) struct Config {
     pub(crate) bind_address: String,

@@ -7,14 +7,10 @@ edition = "2021"
 actix-rt = "2.10.0"
 actix-web = "4.10.2"
 serde = { version = "1.0.219", features = ["derive"] }
-serde_repr = "0.1.20"
-futures = "0.3.31"
-serde_millis = "0.1.1"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-sqlx = { version = "0.8.5", features = ["mysql", "runtime-async-std-native-tls", "uuid", "chrono", "macros"] }
-chrono = { version = "0.4.41", features = ["serde"] }
 envy = { version = "0.4.2" }
 dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
 thiserror = "2.0.12"
-select-fields-derive = { path = "../select-fields-derive" }
+diesel = { version = "2.2.10" }
+diesel-async = { version = "0.5.2", features = ["mysql", "deadpool"] }

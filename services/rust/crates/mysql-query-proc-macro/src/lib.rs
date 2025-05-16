@@ -2,6 +2,8 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, parse_macro_input};
 
+struct UpdateQuery();
+
 fn get_table_name(input: &DeriveInput) -> String {
     let mut table_name: Option<String> = None;
     for attr in input.attrs.iter() {
@@ -14,6 +16,20 @@ fn get_table_name(input: &DeriveInput) -> String {
     }
 
     table_name.expect("Missing #[table_name(\"...\")] attribute")
+}
+
+fn get_id_field_name(input: &DeriveInput) -> String {
+    let mut id: Option<String> = None;
+    for attr in input.attrs.iter() {
+        if attr.path().is_ident("id") {
+            let meta = attr
+                .parse_args::<syn::LitStr>()
+                .expect("Expected string literal for #[id(\"...\")]");
+            id = Some(meta.value());
+        }
+    }
+
+    id.expect("Missing #[id(\"...\")] attribute")
 }
 
 fn get_field_names(input: &DeriveInput) -> Vec<String> {
@@ -59,3 +75,13 @@ pub fn derive_select_query(input: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
+
+// #[proc_macro_derive(Update, attributes(table_name, id))]
+// pub fn derive_update_query(input: TokenStream) -> TokenStream {
+//     let input = parse_macro_input!(input as DeriveInput);
+//     let struct_name = input.ident.clone();
+//
+//     let table_name = get_table_name(&input);
+//     let field_names = get_field_names(&input);
+//     let id_field = get_id_field_name(&input);
+// }
