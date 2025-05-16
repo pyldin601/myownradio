@@ -32,6 +32,16 @@ pub(crate) async fn update_user_channel() -> impl Responder {
     HttpResponse::NotImplemented().finish()
 }
 
-pub(crate) async fn create_user_channel() -> impl Responder {
-    HttpResponse::NotImplemented().finish()
+pub(crate) async fn create_user_channel(
+    new_channel: web::Json<channels::NewChannel>,
+    user_id: web::Path<i32>,
+    pool: web::Data<DbPool>,
+) -> Response {
+    let user_id = user_id.into_inner();
+    let new_channel = new_channel.into_inner();
+    let mut conn = pool.get_connection().await?;
+
+    let channel = channels::create(&new_channel, user_id, &mut conn).await?;
+
+    Ok(HttpResponse::Ok().json(channel))
 }
