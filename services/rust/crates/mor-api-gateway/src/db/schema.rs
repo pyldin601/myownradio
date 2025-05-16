@@ -21,3 +21,64 @@ table! {
         rtmp_streaming_key -> Text
     }
 }
+
+table! {
+    r_tracks (tid) {
+        tid -> Integer,
+        file_id -> Integer,
+        uid -> Integer,
+        filename -> VarChar,
+        hash -> VarChar,
+        ext -> VarChar,
+        artist -> VarChar,
+        title -> VarChar,
+        album -> VarChar,
+        track_number -> VarChar,
+        genre -> VarChar,
+        date -> VarChar,
+        cue -> Text,
+        buy -> VarChar,
+        duration -> Integer,
+        filesize -> Integer,
+        color -> Integer,
+        uploaded -> Integer,
+        copy_of -> Integer,
+        used_count -> Integer,
+        is_new -> TinyInt,
+        can_be_shared -> TinyInt,
+        is_deleted -> TinyInt,
+        deleted -> Integer
+    }
+}
+
+table! {
+    r_link (id) {
+        id -> BigInt,
+        stream_id -> Integer,
+        track_id -> Integer,
+        t_order -> Integer,
+        unique_id -> VarChar,
+        time_offset -> BigInt
+    }
+}
+
+table! {
+    fs_file (file_id) {
+        file_id -> Integer,
+        file_size -> BigInt,
+        file_hash -> VarChar,
+        file_extension -> VarChar,
+        server_id -> Integer,
+        use_count -> Integer
+    }
+}
+
+table! {
+    fs_list (fs_id) {
+        fs_id -> Integer,
+        is_online -> TinyInt,
+        is_enabled -> TinyInt,
+        fs_host -> VarChar,
+        files_count -> Integer
+    }
+}
