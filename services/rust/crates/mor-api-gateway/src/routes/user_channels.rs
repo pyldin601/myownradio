@@ -1,6 +1,6 @@
 use crate::db::{channels, DbPool};
 use crate::response::{Error, Response};
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse};
 
 pub(crate) async fn list_user_channels(
     user_id: web::Path<i32>,
@@ -19,6 +19,7 @@ pub(crate) async fn get_user_channel(
     pool: web::Data<DbPool>,
 ) -> Response {
     let (user_id, channel_id) = path.into_inner();
+
     let mut conn = pool.get_connection().await?;
 
     let channel = channels::get_one_by_id_and_user_id(channel_id, user_id, &mut conn)
@@ -28,20 +29,32 @@ pub(crate) async fn get_user_channel(
     Ok(HttpResponse::Ok().json(channel))
 }
 
-pub(crate) async fn update_user_channel() -> impl Responder {
-    HttpResponse::NotImplemented().finish()
+pub(crate) async fn update_user_channel(
+    channel: web::Json<channels::ChannelInput>,
+    path: web::Path<(i32, i32)>,
+    pool: web::Data<DbPool>,
+) -> Response {
+    let (user_id, channel_id) = path.into_inner();
+    let channel = channel.into_inner();
+
+    let mut conn = pool.get_connection().await?;
+
+    let channel = channels::update(&channel, channel_id, user_id, &mut conn).await?;
+
+    Ok(HttpResponse::Ok().json(channel))
 }
 
 pub(crate) async fn create_user_channel(
-    new_channel: web::Json<channels::NewChannel>,
+    channel: web::Json<channels::ChannelInput>,
     user_id: web::Path<i32>,
     pool: web::Data<DbPool>,
 ) -> Response {
     let user_id = user_id.into_inner();
-    let new_channel = new_channel.into_inner();
+    let channel = channel.into_inner();
+
     let mut conn = pool.get_connection().await?;
 
-    let channel = channels::create(&new_channel, user_id, &mut conn).await?;
+    let channel = channels::create(&channel, user_id, &mut conn).await?;
 
     Ok(HttpResponse::Ok().json(channel))
 }

@@ -30,7 +30,7 @@ pub(crate) struct Channel {
 }
 
 #[derive(Deserialize)]
-pub struct NewChannel {
+pub struct ChannelInput {
     pub(crate) name: String,
     pub(crate) permalink: Option<String>,
     pub(crate) info: String,

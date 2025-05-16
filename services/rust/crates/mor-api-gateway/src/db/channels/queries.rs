@@ -1,4 +1,4 @@
-use crate::db::channels::{Channel, NewChannel};
+use crate::db::channels::{Channel, ChannelInput};
 use crate::db::schema::r_streams::{dsl::*, name};
 use diesel::insert_into;
 use diesel::prelude::*;
@@ -38,7 +38,7 @@ pub(crate) async fn get_one_by_id_and_user_id(
 }
 
 pub(crate) async fn create(
-    new_channel: &NewChannel,
+    new_channel: &ChannelInput,
     user_id: i32,
     conn: &mut AsyncMysqlConnection,
 ) -> Result<Channel, Error> {
@@ -77,6 +77,55 @@ pub(crate) async fn create(
                 .await?;
 
             Ok(inserted_channel)
+        })
+    })
+    .await
+}
+
+pub(crate) async fn update(
+    new_channel: &ChannelInput,
+    channel_id: i32,
+    user_id: i32,
+    conn: &mut AsyncMysqlConnection,
+) -> Result<Option<Channel>, Error> {
+    conn.transaction::<_, Error, _>(|trans| {
+        Box::pin(async move {
+            let rows_updated = diesel::update(r_streams)
+                .filter(sid.eq(channel_id))
+                .filter(uid.eq(user_id))
+                .set((
+                    uid.eq(&user_id),
+                    name.eq(&new_channel.name),
+                    permalink.eq(&new_channel.permalink),
+                    info.eq(&new_channel.info),
+                    jingle_interval.eq(&new_channel.jingle_interval),
+                    status.eq(&new_channel.status),
+                    started.eq(&new_channel.started),
+                    started_from.eq(&new_channel.started_from),
+                    access.eq(&new_channel.access),
+                    category.eq(&new_channel.category),
+                    hashtags.eq(&new_channel.hashtags),
+                    cover.eq(&new_channel.cover),
+                    cover_background.eq(&new_channel.cover_background),
+                    created.eq(&new_channel.created),
+                    rtmp_url.eq(&new_channel.rtmp_url),
+                    rtmp_streaming_key.eq(&new_channel.rtmp_streaming_key),
+                ))
+                .execute(trans)
+                .await?;
+
+            if rows_updated == 0 {
+                return Ok(None);
+            }
+
+            let updated_channel = r_streams
+                .filter(sid.eq(channel_id))
+                .filter(uid.eq(user_id))
+                .select(Channel::as_select())
+                .first(trans)
+                .await?;
+
+            Ok(Some(updated_channel))
         })
     })
     .await
