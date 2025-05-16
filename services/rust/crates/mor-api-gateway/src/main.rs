@@ -1,7 +1,6 @@
 use crate::config::Config;
 use crate::db::DbPool;
 use crate::routes::{channel_tracks, channels};
-use actix_web::http::Method;
 use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
