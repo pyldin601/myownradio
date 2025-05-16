@@ -1,4 +1,22 @@
 diesel::table! {
+    r_users (uid) {
+        uid -> Integer,
+        mail -> VarChar,
+        login -> Nullable<VarChar>,
+        password -> Nullable<VarChar>,
+        name -> Nullable<VarChar>,
+        country_id -> Nullable<Integer>,
+        info -> Nullable<VarChar>,
+        rights -> Nullable<Integer>,
+        registration_date -> Unsigned<Integer>,
+        last_visit_date -> Nullable<Unsigned<Integer>>,
+        permalink -> Nullable<VarChar>,
+        avatar -> Nullable<VarChar>,
+        is_enabled -> TinyInt,
+    }
+}
+
+diesel::table! {
     r_streams (sid) {
         sid -> Integer,
         uid -> Integer,
@@ -19,6 +37,8 @@ diesel::table! {
         rtmp_streaming_key -> Text
     }
 }
+
+diesel::joinable!(r_streams -> r_users (uid));
 
 diesel::table! {
     r_tracks (tid) {
@@ -48,6 +68,8 @@ diesel::table! {
         deleted -> Nullable<Integer>
     }
 }
+
+diesel::joinable!(r_tracks -> r_users (uid));
 
 diesel::table! {
     r_link (id) {
@@ -85,5 +107,3 @@ diesel::table! {
         files_count -> Integer
     }
 }
-
-diesel::allow_tables_to_appear_in_same_query!(r_link, r_streams, r_tracks, fs_file, fs_list);

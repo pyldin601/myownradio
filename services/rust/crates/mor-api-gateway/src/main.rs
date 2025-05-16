@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::db::DbPool;
-use crate::routes::{channel_tracks, channels, tracks};
+use crate::routes::{channel_tracks, channels, tracks, users};
 use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
@@ -34,7 +34,18 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(config.clone()))
             .app_data(web::Data::new(db_pool.clone()))
             .service(
+                web::resource("/users")
+                    .get(users::list_users)
+                    .post(users::create_user),
+            )
+            .service(
                 web::scope("/users/{userId}")
+                    .service(
+                        web::resource("")
+                            .get(users::get_user)
+                            .delete(users::delete_user)
+                            .put(users::update_user),
+                    )
                     .service(
                         web::scope("/channels")
                             .service(
