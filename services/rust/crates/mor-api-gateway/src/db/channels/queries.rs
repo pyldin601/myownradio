@@ -1,6 +1,5 @@
 use crate::db::channels::{Channel, ChannelInput};
 use crate::db::schema::r_streams::{dsl::*, name};
-use diesel::insert_into;
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::sql_types::Integer;
@@ -44,7 +43,7 @@ pub(crate) async fn create(
 ) -> Result<Channel, Error> {
     conn.transaction::<_, Error, _>(|trans| {
         Box::pin(async move {
-            insert_into(r_streams)
+            diesel::insert_into(r_streams)
                 .values((
                     uid.eq(&user_id),
                     name.eq(&new_channel.name),
@@ -129,4 +128,18 @@ pub(crate) async fn update(
         })
     })
     .await
+}
+
+pub(crate) async fn delete(
+    channel_id: i32,
+    user_id: i32,
+    conn: &mut AsyncMysqlConnection,
+) -> Result<bool, Error> {
+    let rows_deleted = diesel::delete(r_streams)
+        .filter(sid.eq(channel_id))
+        .filter(uid.eq(user_id))
+        .execute(conn)
+        .await?;
+
+    Ok(rows_deleted == 1)
 }

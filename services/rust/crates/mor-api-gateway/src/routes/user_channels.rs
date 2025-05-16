@@ -60,3 +60,17 @@ pub(crate) async fn create_user_channel(
 
     Ok(HttpResponse::Ok().json(channel))
 }
+
+pub(crate) async fn delete_user_channel(
+    path: web::Path<(i32, i32)>,
+    pool: web::Data<DbPool>,
+) -> Response {
+    let (user_id, channel_id) = path.into_inner();
+
+    let mut conn = pool.get_connection().await?;
+
+    match channels::delete(channel_id, user_id, &mut conn).await? {
+        true => Ok(HttpResponse::Accepted().finish()),
+        false => Err(Error::EntityNotFound),
+    }
+}

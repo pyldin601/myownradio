@@ -44,7 +44,8 @@ async fn main() -> std::io::Result<()> {
                         .service(
                             web::resource("/{channelId}")
                                 .get(user_channels::get_user_channel)
-                                .put(user_channels::update_user_channel),
+                                .put(user_channels::update_user_channel)
+                                .delete(user_channels::delete_user_channel),
                         ),
                 ),
             )
