@@ -1,1 +1,1 @@
-pub(crate) mod user_channels;
+pub(crate) mod channels;
