@@ -1,5 +1,5 @@
 use crate::db::schema::r_streams;
-use diesel::{Insertable, Queryable, Selectable};
+use diesel::{AsChangeset, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Selectable, Queryable, Insertable)]
@@ -28,8 +28,9 @@ pub(crate) struct Channel {
     pub(crate) rtmp_streaming_key: String,
 }
 
-#[derive(Deserialize)]
-pub struct ChannelInput {
+#[derive(Deserialize, AsChangeset, Insertable)]
+#[diesel(table_name = r_streams)]
+pub(crate) struct ChannelInput {
     pub(crate) name: String,
     pub(crate) permalink: Option<String>,
     pub(crate) info: String,

@@ -1,5 +1,5 @@
 use crate::db::channels::{Channel, ChannelInput};
-use crate::db::schema::r_streams::{dsl::*, name};
+use crate::db::schema::r_streams::dsl::*;
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::sql_types::Integer;
@@ -44,24 +44,7 @@ pub(crate) async fn create(
     conn.transaction::<_, Error, _>(|trans| {
         Box::pin(async move {
             diesel::insert_into(r_streams)
-                .values((
-                    uid.eq(&user_id),
-                    name.eq(&new_channel.name),
-                    permalink.eq(&new_channel.permalink),
-                    info.eq(&new_channel.info),
-                    jingle_interval.eq(&new_channel.jingle_interval),
-                    status.eq(&new_channel.status),
-                    started.eq(&new_channel.started),
-                    started_from.eq(&new_channel.started_from),
-                    access.eq(&new_channel.access),
-                    category.eq(&new_channel.category),
-                    hashtags.eq(&new_channel.hashtags),
-                    cover.eq(&new_channel.cover),
-                    cover_background.eq(&new_channel.cover_background),
-                    created.eq(&new_channel.created),
-                    rtmp_url.eq(&new_channel.rtmp_url),
-                    rtmp_streaming_key.eq(&new_channel.rtmp_streaming_key),
-                ))
+                .values((uid.eq(&user_id), new_channel))
                 .execute(trans)
                 .await?;
 
@@ -82,7 +65,7 @@ pub(crate) async fn create(
 }
 
 pub(crate) async fn update(
-    new_channel: &ChannelInput,
+    channel_input: &ChannelInput,
     channel_id: i32,
     user_id: i32,
     conn: &mut AsyncMysqlConnection,
@@ -92,24 +75,7 @@ pub(crate) async fn update(
             let rows_updated = diesel::update(r_streams)
                 .filter(sid.eq(channel_id))
                 .filter(uid.eq(user_id))
-                .set((
-                    uid.eq(&user_id),
-                    name.eq(&new_channel.name),
-                    permalink.eq(&new_channel.permalink),
-                    info.eq(&new_channel.info),
-                    jingle_interval.eq(&new_channel.jingle_interval),
-                    status.eq(&new_channel.status),
-                    started.eq(&new_channel.started),
-                    started_from.eq(&new_channel.started_from),
-                    access.eq(&new_channel.access),
-                    category.eq(&new_channel.category),
-                    hashtags.eq(&new_channel.hashtags),
-                    cover.eq(&new_channel.cover),
-                    cover_background.eq(&new_channel.cover_background),
-                    created.eq(&new_channel.created),
-                    rtmp_url.eq(&new_channel.rtmp_url),
-                    rtmp_streaming_key.eq(&new_channel.rtmp_streaming_key),
-                ))
+                .set(channel_input)
                 .execute(trans)
                 .await?;
 
