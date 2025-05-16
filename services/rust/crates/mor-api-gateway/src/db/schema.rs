@@ -23,7 +23,7 @@ diesel::table! {
 diesel::table! {
     r_tracks (tid) {
         tid -> Integer,
-        file_id -> Integer,
+        file_id -> Nullable<Integer>,
         uid -> Integer,
         filename -> VarChar,
         hash -> VarChar,
@@ -34,18 +34,18 @@ diesel::table! {
         track_number -> VarChar,
         genre -> VarChar,
         date -> VarChar,
-        cue -> Text,
-        buy -> VarChar,
+        cue -> Nullable<Text>,
+        buy -> Nullable<VarChar>,
         duration -> Integer,
         filesize -> Integer,
         color -> Integer,
         uploaded -> Integer,
-        copy_of -> Integer,
+        copy_of -> Nullable<Integer>,
         used_count -> Integer,
         is_new -> TinyInt,
         can_be_shared -> TinyInt,
         is_deleted -> TinyInt,
-        deleted -> Integer
+        deleted -> Nullable<Integer>
     }
 }
 
