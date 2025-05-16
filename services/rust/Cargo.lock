@@ -1658,15 +1658,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mysql-query-proc-macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "mysql_async"
 version = "0.34.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
