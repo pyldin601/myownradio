@@ -1,6 +1,4 @@
-use diesel::table;
-
-table! {
+diesel::table! {
     r_streams (sid) {
         sid -> Integer,
         uid -> Integer,
@@ -22,7 +20,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     r_tracks (tid) {
         tid -> Integer,
         file_id -> Integer,
@@ -51,7 +49,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     r_link (id) {
         id -> BigInt,
         stream_id -> Integer,
@@ -62,7 +60,10 @@ table! {
     }
 }
 
-table! {
+diesel::joinable!(r_link -> r_tracks (track_id));
+diesel::joinable!(r_link -> r_streams (stream_id));
+
+diesel::table! {
     fs_file (file_id) {
         file_id -> Integer,
         file_size -> BigInt,
@@ -73,7 +74,9 @@ table! {
     }
 }
 
-table! {
+diesel::joinable!(fs_file -> fs_list (server_id));
+
+diesel::table! {
     fs_list (fs_id) {
         fs_id -> Integer,
         is_online -> TinyInt,
@@ -82,3 +85,5 @@ table! {
         files_count -> Integer
     }
 }
+
+diesel::allow_tables_to_appear_in_same_query!(r_link, r_streams, r_tracks, fs_file, fs_list);
