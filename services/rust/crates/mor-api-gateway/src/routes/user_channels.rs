@@ -39,7 +39,9 @@ pub(crate) async fn update_user_channel(
 
     let mut conn = pool.get_connection().await?;
 
-    let channel = channels::update(&channel, channel_id, user_id, &mut conn).await?;
+    let channel = channels::update(&channel, channel_id, user_id, &mut conn)
+        .await?
+        .ok_or(Error::EntityNotFound)?;
 
     Ok(HttpResponse::Ok().json(channel))
 }

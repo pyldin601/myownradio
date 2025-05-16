@@ -25,7 +25,6 @@ pub(crate) struct Channel {
     pub(crate) cover_background: Option<String>,
     pub(crate) created: i64,
     pub(crate) rtmp_url: String,
-    #[serde(skip_serializing)]
     pub(crate) rtmp_streaming_key: String,
 }
 
