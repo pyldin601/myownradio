@@ -1,0 +1,16 @@
+[package]
+name = "mor-api-gateway"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-rt = "2.10.0"
+actix-web = "4.10.2"
+serde = { version = "1.0.219", features = ["derive"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+envy = { version = "0.4.2" }
+dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"] }
+thiserror = "2.0.12"
+diesel = { version = "2.2.10" }
+diesel-async = { version = "0.5.2", features = ["mysql", "deadpool"] }
