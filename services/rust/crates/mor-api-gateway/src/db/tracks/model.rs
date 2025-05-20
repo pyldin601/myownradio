@@ -1,11 +1,12 @@
 use crate::db::schema::r_tracks;
-use diesel::{AsChangeset, Insertable, Queryable, Selectable};
+use diesel::{AsChangeset, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Selectable, Queryable)]
+#[allow(dead_code)]
+#[derive(Clone, Serialize, Selectable, Queryable, Identifiable)]
+#[diesel(primary_key(tid))]
 #[diesel(table_name = r_tracks)]
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
-#[allow(dead_code)]
 pub(crate) struct Track {
     #[diesel(column_name = "tid")]
     pub(crate) id: i32,

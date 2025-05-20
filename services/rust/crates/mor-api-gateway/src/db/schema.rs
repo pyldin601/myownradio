@@ -84,6 +84,7 @@ diesel::table! {
 
 diesel::joinable!(r_link -> r_tracks (track_id));
 diesel::joinable!(r_link -> r_streams (stream_id));
+diesel::allow_tables_to_appear_in_same_query!(r_link, r_tracks);
 
 diesel::table! {
     fs_file (file_id) {
