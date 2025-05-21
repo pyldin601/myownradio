@@ -87,26 +87,26 @@
             $scope.submit = function () {
                 User.login($scope.credentials)
                     .onSuccess(function (data) {
-                        $analytics.eventTrack('Login', { category: 'Actions' });
-                        Popup.message($scope.tr("FR_LOGIN_MESSAGE", data));
-                        $mixpanel.track("User login");
-                        $scope.status = "";
-                        $rootScope.account.init("/profile/");
-                        if (typeof $location.search().go != "undefined") {
-                            $rootScope.account.init($location.search().go);
-                        } else {
+                            $analytics.eventTrack('Login', {category: 'Actions'});
+                            Popup.message($scope.tr("FR_LOGIN_MESSAGE", data));
+                            $mixpanel.track("User login");
+                            $scope.status = "";
                             $rootScope.account.init("/profile/");
+                            if (typeof $location.search().go != "undefined") {
+                                $rootScope.account.init($location.search().go);
+                            } else {
+                                $rootScope.account.init("/profile/");
+                            }
+                        }, function (err) {
+                            console.log("error");
+                            $scope.status = err;
                         }
-                    }, function (err) {
-                        console.log("error");
-                        $scope.status = err;
-                    }
-                )
+                    )
             };
             $scope.signUpFacebook = function () {
                 FB.login(function (response) {
                     if (response.status === "connected") {
-                        Account.loginByFacebook(response.authResponse).onSuccess(function(data) {
+                        Account.loginByFacebook(response.authResponse).onSuccess(function (data) {
                             $mixpanel.track("User login using Facebook");
                             Popup.message($scope.tr("FR_LOGIN_MESSAGE", data));
                             $scope.status = "";
@@ -119,25 +119,6 @@
                     scope: "email"
                 });
             };
-        }
-
-    ]);
-
-    account.controller("ChangePlanController", ["$scope", "User", "$location", "Popup",
-
-        function ($scope, User, $location, Popup) {
-            $scope.data = {
-                code: "",
-                error: ""
-            };
-            $scope.submit = function () {
-                User.enterPromoCode($scope.data.code).onSuccess(function (data) {
-                    Popup.message($scope.tr("FR_PLAN_CHANGED_MESSAGE", [data]));
-                    $location.url("/profile/");
-                }, function (message) {
-                    $scope.data.error = message;
-                })
-            }
         }
 
     ]);
@@ -187,7 +168,15 @@
         function ($scope, $location, Account, $routeParams, $mixpanel) {
             $mixpanel.track('Viewing sign up completion page');
             // Init variables
-            $scope.signup = {code: $routeParams.code, login: "", password: "", name: "", info: "", permalink: "", country_id: null};
+            $scope.signup = {
+                code: $routeParams.code,
+                login: "",
+                password: "",
+                name: "",
+                info: "",
+                permalink: "",
+                country_id: null
+            };
             $scope.status = "";
             $scope.submit = function () {
                 $mixpanel.track('Completing signing up');
@@ -399,20 +388,6 @@
                 });
                 return Response(action);
             },
-            /**
-             * @method enterPromoCode
-             * @param code
-             * @returns {*}
-             */
-            enterPromoCode: function (code) {
-                return Response($http({
-                    method: "POST",
-                    url: "/api/v2/self/promoCode",
-                    data: {
-                        code: code
-                    }
-                }))
-            }
         }
     }]);
 
@@ -460,14 +435,14 @@
                         if ($scope.stream.bookmarked) {
                             Bookmarks.remove($scope.stream).onSuccess(function () {
                                 $rootScope.$broadcast("BOOKMARK", {id: $scope.stream.sid, bookmarked: false});
-                                Popup.message($rootScope.tr("FR_BOOKMARK_REMOVE_SUCCESS", [ $scope.stream.name ]));
+                                Popup.message($rootScope.tr("FR_BOOKMARK_REMOVE_SUCCESS", [$scope.stream.name]));
                             }, function (message) {
                                 Popup.message(message);
                             });
                         } else {
                             Bookmarks.add($scope.stream).onSuccess(function () {
                                 $rootScope.$broadcast("BOOKMARK", {id: $scope.stream.sid, bookmarked: true});
-                                Popup.message($rootScope.tr("FR_BOOKMARK_ADD_SUCCESS", [ $scope.stream.name ]));
+                                Popup.message($rootScope.tr("FR_BOOKMARK_ADD_SUCCESS", [$scope.stream.name]));
                             }, function (message) {
                                 Popup.message(message);
                             });
@@ -475,11 +450,11 @@
                     });
                 },
                 controller: ["$scope", function ($scope) {
-                        $scope.$on("BOOKMARK", function (broadcast, data) {
-                            if ($scope.stream.sid == data.id) {
-                                $scope.stream.bookmarked = data.bookmarked;
-                            }
-                        })
+                    $scope.$on("BOOKMARK", function (broadcast, data) {
+                        if ($scope.stream.sid == data.id) {
+                            $scope.stream.bookmarked = data.bookmarked;
+                        }
+                    })
                 }]
             }
         }

@@ -1,9 +1,9 @@
 /**
  * Created by Roman on 08.12.2014.
  */
-const { default: mobxAngular } = require('mobx-angularjs');
+const {default: mobxAngular} = require('mobx-angularjs');
 
-var SITE_TITLE =  "Radioterio - Your own web radio station";
+var SITE_TITLE = "Radioterio - Your own web radio station";
 
 (function () {
 
@@ -19,7 +19,8 @@ var SITE_TITLE =  "Radioterio - Your own web radio station";
 
     ]);
 
-    md.controller("MainController", [function () { }]);
+    md.controller("MainController", [function () {
+    }]);
 
     angular.module('analytics.mixpanel').config(['$mixpanelProvider', function ($mixpanelProvider) {
         $mixpanelProvider.apiKey('02099ce8dcddbc93c2a4e0842d124635');
@@ -93,12 +94,6 @@ var SITE_TITLE =  "Radioterio - Your own web radio station";
         PATH_PROFILE_CHANGE_PASSWORD: ["/profile/password", {
             templateUrl: "/views/auth/change-password.html",
             title: "Change password on " + SITE_TITLE,
-            needsAuth: true
-        }],
-
-        PATH_PROFILE_CHANGE_PLAN: ["/profile/plan", {
-            templateUrl: "/views/auth/change-plan.html",
-            title: "Upgrade account on " + SITE_TITLE,
             needsAuth: true
         }],
 
@@ -334,68 +329,68 @@ var SITE_TITLE =  "Radioterio - Your own web radio station";
 
         function ($rootScope, $location, $route, $document, SITE_TITLE, $analytics, Response, $http, $mixpanel) {
 
-        $rootScope.lib = {
-            countries: [],
-            categories: []
-        };
+            $rootScope.lib = {
+                countries: [],
+                categories: []
+            };
 
-        $rootScope.go = function (path) {
-            $location.path(path);
-        };
+            $rootScope.go = function (path) {
+                $location.path(path);
+            };
 
-        $rootScope.reload = function () {
-            Response($http({
-                method: "GET",
-                url: "/api/v2/getCollection"
-            })).onSuccess(function (data) {
-                $rootScope.lib = data;
+            $rootScope.reload = function () {
+                Response($http({
+                    method: "GET",
+                    url: "/api/v2/getCollection"
+                })).onSuccess(function (data) {
+                    $rootScope.lib = data;
+                });
+            };
+
+            $rootScope.reload();
+
+            $("a").live("click", function () {
+                $analytics.eventTrack('followLink', {category: 'Application', label: this.href});
+                if (this.href == $location.absUrl()) {
+                    $route.reload();
+                }
             });
-        };
 
-        $rootScope.reload();
+            initHelpers();
 
-        $("a").live("click", function () {
-            $analytics.eventTrack('followLink', { category: 'Application', label: this.href });
-            if (this.href == $location.absUrl()) {
-                $route.reload();
-            }
-        });
+            $rootScope.$on("$routeChangeSuccess", function (event, currentRoute) {
 
-        initHelpers();
+                $rootScope.rootClass = currentRoute.rootClass;
+                $rootScope.url = $location.url();
 
-        $rootScope.$on("$routeChangeSuccess", function (event, currentRoute) {
+                $document.get(0).title = currentRoute.title || SITE_TITLE;
 
-            $rootScope.rootClass = currentRoute.rootClass;
-            $rootScope.url = $location.url();
+                $mixpanel.track('Page Loaded');
 
-            $document.get(0).title = currentRoute.title || SITE_TITLE;
+            });
 
-            $mixpanel.track('Page Loaded');
+            $rootScope.openedDialogs = 0;
 
-        });
+            $rootScope.$on("ngDialog.opened", function () {
+                $rootScope.openedDialogs++;
+                $rootScope.$apply();
+            });
 
-        $rootScope.openedDialogs = 0;
-
-        $rootScope.$on("ngDialog.opened", function () {
-            $rootScope.openedDialogs++;
-            $rootScope.$apply();
-        });
-
-        $rootScope.$on("ngDialog.closed", function () {
-            $rootScope.openedDialogs--;
-            $rootScope.$apply();
-        });
+            $rootScope.$on("ngDialog.closed", function () {
+                $rootScope.openedDialogs--;
+                $rootScope.$apply();
+            });
 
 
-        $rootScope.meta = {
-            title: SITE_TITLE,
-            image: "",
-            url: "",
-            description: ""
-        };
+            $rootScope.meta = {
+                title: SITE_TITLE,
+                image: "",
+                url: "",
+                description: ""
+            };
 
 
-    }
+        }
 
     ]);
 
@@ -441,7 +436,9 @@ var SITE_TITLE =  "Radioterio - Your own web radio station";
             },
             link: function (scope) {
                 scope.$watch("tags", function (data) {
-                    scope.tagsArray = data.split(",").map(function (el) { return el.trim() });
+                    scope.tagsArray = data.split(",").map(function (el) {
+                        return el.trim()
+                    });
                 });
             }
         }
