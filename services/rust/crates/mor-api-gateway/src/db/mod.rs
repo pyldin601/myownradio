@@ -1,5 +1,6 @@
 pub(crate) mod channel_tracks;
 pub(crate) mod channels;
+mod files;
 mod pool;
 mod schema;
 pub(crate) mod tracks;
