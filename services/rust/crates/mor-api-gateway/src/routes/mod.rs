@@ -13,6 +13,7 @@ pub(crate) fn get_routes() -> Scope {
                 .get(users::list_users)
                 .post(users::create_user),
         )
+        .service(web::resource("/users/by-email/{email}").get(users::get_user_by_email))
         .service(
             web::resource("/users/{userId}")
                 .get(users::get_user)
