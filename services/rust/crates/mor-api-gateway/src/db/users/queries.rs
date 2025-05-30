@@ -28,14 +28,12 @@ pub(crate) async fn get_by_id(
     }
 }
 
-pub(crate) async fn get_by_login_and_password(
-    input_login: &str,
-    input_password: &str,
+pub(crate) async fn get_by_email(
+    email: &str,
     conn: &mut AsyncMysqlConnection,
 ) -> Result<Option<User>, Error> {
     match r_users
-        .filter(login.eq(input_login))
-        .filter(password.eq(input_password))
+        .filter(mail.eq(email))
         .select(User::as_select())
         .first(conn)
         .await
