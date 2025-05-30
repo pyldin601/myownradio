@@ -2,6 +2,7 @@ use actix_web::{web, Scope};
 
 mod channel_tracks;
 mod channels;
+mod files;
 mod tracks;
 mod users;
 
@@ -58,4 +59,12 @@ pub(crate) fn get_routes() -> Scope {
             web::resource("/users/{userId}/channels/{channelId}/tracks/{trackId}/reorder")
                 .post(channel_tracks::reorder_track),
         )
+        // Files
+        .service(
+            web::resource("/files/{fileId}")
+                .get(files::get_file)
+                .delete(files::delete_file)
+                .put(files::update_file),
+        )
+        .service(web::resource("/files").get(files::add_file))
 }
