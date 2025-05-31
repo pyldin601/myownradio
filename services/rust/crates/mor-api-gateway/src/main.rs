@@ -4,6 +4,7 @@ use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
+mod auth;
 mod config;
 mod db;
 mod response;
