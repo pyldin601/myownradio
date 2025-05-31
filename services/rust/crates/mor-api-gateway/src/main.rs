@@ -1,6 +1,5 @@
 use crate::config::Config;
 use crate::db::DbPool;
-use crate::routes::get_routes;
 use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
@@ -8,7 +7,7 @@ use tracing_subscriber::EnvFilter;
 mod config;
 mod db;
 mod response;
-mod routes;
+mod router;
 
 const SHUTDOWN_TIMEOUT: u64 = 30;
 
@@ -33,7 +32,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(config.clone()))
             .app_data(web::Data::new(db_pool.clone()))
-            .service(get_routes())
+            .configure(router::configure)
     })
     .shutdown_timeout(SHUTDOWN_TIMEOUT)
     .bind(bind_address.clone())?
