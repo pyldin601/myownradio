@@ -7,21 +7,18 @@ pub(crate) fn verify_password(password: &str, hash: &str) -> Result<bool, bcrypt
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
-pub(crate) struct LegacyAuthTokenData {
+pub(crate) struct TokenData {
     #[serde(rename = "TOKEN")]
     pub(crate) token: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
-pub(crate) struct LegacyAuthTokenClaims {
+pub(crate) struct TokenClaims {
     pub(crate) id: String,
-    pub(crate) data: LegacyAuthTokenData,
+    pub(crate) data: TokenData,
 }
 
-pub(crate) fn sign_legacy_claims(
-    claims: &LegacyAuthTokenClaims,
-    legacy_secret_key: &str,
-) -> String {
+pub(crate) fn sign_legacy_claims(claims: &TokenClaims, legacy_secret_key: &str) -> String {
     let key = jsonwebtoken::EncodingKey::from_secret(legacy_secret_key.as_ref());
     let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::HS256);
 

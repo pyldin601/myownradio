@@ -75,9 +75,9 @@ pub(crate) async fn login(
     };
     sessions::create(&session, &mut conn).await?;
 
-    let claims = legacy::LegacyAuthTokenClaims {
+    let claims = legacy::TokenClaims {
         id: session.session_id,
-        data: legacy::LegacyAuthTokenData {
+        data: legacy::TokenData {
             token: session.token,
         },
     };
