@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[diesel(check_for_backend(diesel::mysql::Mysql))]
 #[allow(dead_code)]
 pub(crate) struct User {
-    uid: i32,
+    pub(crate) uid: i32,
     mail: String,
     login: Option<String>,
     pub(crate) password: Option<String>,

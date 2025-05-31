@@ -15,6 +15,7 @@ pub(crate) struct MySqlConfig {
 #[derive(Clone, Debug, Deserialize)]
 pub(crate) struct Config {
     pub(crate) bind_address: String,
+    pub(crate) auth_legacy_session_secret_key: String,
     #[serde(flatten)]
     pub(crate) mysql: MySqlConfig,
 }
