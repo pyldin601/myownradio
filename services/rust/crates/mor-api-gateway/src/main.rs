@@ -4,6 +4,7 @@ use actix_web::{web, App, HttpServer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
+mod app;
 mod auth;
 mod config;
 mod db;
@@ -26,18 +27,12 @@ async fn main() -> std::io::Result<()> {
         &config.mysql.host,
         &config.mysql.database,
     );
-
     let bind_address = config.bind_address.clone();
 
-    let server = HttpServer::new(move || {
-        App::new()
-            .app_data(web::Data::new(config.clone()))
-            .app_data(web::Data::new(db_pool.clone()))
-            .configure(router::configure)
-    })
-    .shutdown_timeout(SHUTDOWN_TIMEOUT)
-    .bind(bind_address.clone())?
-    .run();
+    let server = HttpServer::new(move || App::new().configure(app::configure(&config, &db_pool)))
+        .shutdown_timeout(SHUTDOWN_TIMEOUT)
+        .bind(bind_address.clone())?
+        .run();
 
     info!("server is listening on: {bind_address}");
 
