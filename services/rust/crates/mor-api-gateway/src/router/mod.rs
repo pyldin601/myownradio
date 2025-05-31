@@ -6,8 +6,8 @@ mod files;
 mod tracks;
 mod users;
 
-pub(crate) fn get_routes() -> Scope {
-    web::scope("")
+pub(crate) fn configure(cfg: &mut web::ServiceConfig) {
+    cfg
         // User routes
         .service(
             web::resource("/users")
@@ -66,5 +66,5 @@ pub(crate) fn get_routes() -> Scope {
                 .delete(files::delete_file)
                 .put(files::update_file),
         )
-        .service(web::resource("/files").get(files::add_file))
+        .service(web::resource("/files").get(files::add_file));
 }
