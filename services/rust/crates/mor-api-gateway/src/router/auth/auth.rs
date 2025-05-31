@@ -1,4 +1,3 @@
-use crate::auth;
 use crate::auth::legacy;
 use crate::config::Config;
 use crate::db::{sessions, users, DbPool};
@@ -6,11 +5,13 @@ use crate::response::Response;
 use actix_web::cookie::time::OffsetDateTime;
 use actix_web::cookie::CookieBuilder;
 use actix_web::{web, HttpResponse};
-use chrono::Utc;
+use chrono::{TimeDelta, Utc};
+use std::ops::Add;
 use tracing::error;
 
 const LEGACY_SESSION_COOKIE_NAME: &str = "secure_session";
-const YEAR: std::time::Duration = std::time::Duration::from_secs(31_536_000);
+const DURATION_YEAR: std::time::Duration = std::time::Duration::from_secs(31_536_000);
+const TIME_DELTA_YEAR: TimeDelta = TimeDelta::days(365);
 
 #[derive(serde::Deserialize)]
 pub(crate) struct LoginRequestBody {
@@ -47,7 +48,7 @@ pub(crate) async fn login(
         None => return Ok(HttpResponse::Unauthorized().finish()),
     };
 
-    let password_valid = match auth::legacy::verify_password(&password, &password_hash) {
+    let password_valid = match legacy::verify_password(&password, &password_hash) {
         Ok(valid) => valid,
         Err(error) => {
             error!(?error, "Password verification failed");
@@ -59,7 +60,6 @@ pub(crate) async fn login(
         return Ok(HttpResponse::Unauthorized().finish());
     }
 
-    // Create a legacy session
     let token = uuid::Uuid::new_v4().to_string().replace("-", "");
     let session_id = uuid::Uuid::new_v4().to_string();
     let session = sessions::Session {
@@ -67,10 +67,10 @@ pub(crate) async fn login(
         session_id,
         uid: user.uid,
         ip: String::default(),
-        client_id: String::default(),
-        authorized: Utc::now().naive_utc(),
         permanent: 1,
-        expires: None,
+        authorized: Utc::now().naive_utc(),
+        expires: Some(Utc::now().add(TIME_DELTA_YEAR).naive_utc()),
+        client_id: String::default(),
         http_user_agent: String::default(),
     };
     sessions::create(&session, &mut conn).await?;
@@ -84,7 +84,7 @@ pub(crate) async fn login(
     let signature = legacy::sign_legacy_claims(&claims, &config.auth_legacy_session_secret_key);
 
     let session_cookie = CookieBuilder::new(LEGACY_SESSION_COOKIE_NAME, signature)
-        .expires(OffsetDateTime::now_utc() + YEAR)
+        .expires(OffsetDateTime::now_utc() + DURATION_YEAR)
         .finish();
 
     Ok(HttpResponse::Ok().cookie(session_cookie).json(user))
