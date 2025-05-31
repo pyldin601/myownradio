@@ -1,5 +1,8 @@
+use crate::auth;
+use crate::db::{users, DbPool};
 use crate::response::Response;
 use actix_web::{web, HttpResponse};
+use tracing::error;
 
 #[derive(serde::Deserialize)]
 pub(crate) struct LoginRequestBody {
@@ -17,8 +20,34 @@ pub(crate) struct LoginRequestBody {
 /// - `200 OK` on success
 /// - `401 Unauthorized` if credentials are invalid
 /// - `501 Not Implemented` (placeholder for now)
-pub(crate) async fn login(body: web::Json<LoginRequestBody>) -> Response {
+pub(crate) async fn login(body: web::Json<LoginRequestBody>, pool: web::Data<DbPool>) -> Response {
     let LoginRequestBody { email, password } = body.into_inner();
+
+    let mut conn = pool.get_connection().await?;
+
+    let user = match users::get_by_email(&email, &mut conn).await? {
+        Some(user) => user,
+        None => return Ok(HttpResponse::Unauthorized().finish()),
+    };
+
+    let password_hash = match user.password.clone() {
+        Some(password_hash) => password_hash,
+        None => return Ok(HttpResponse::Unauthorized().finish()),
+    };
+
+    let password_valid = match auth::legacy::verify_password(&password, &password_hash) {
+        Ok(valid) => valid,
+        Err(error) => {
+            error!(?error, "Password verification failed");
+            return Ok(HttpResponse::InternalServerError().finish());
+        }
+    };
+
+    if !password_valid {
+        return Ok(HttpResponse::Unauthorized().finish());
+    }
+
+    // TODO Create session
 
     Ok(HttpResponse::NotImplemented().finish())
 }

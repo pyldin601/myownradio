@@ -10,7 +10,7 @@ pub(crate) struct User {
     uid: i32,
     mail: String,
     login: Option<String>,
-    password: Option<String>,
+    pub(crate) password: Option<String>,
     name: Option<String>,
     country_id: Option<i32>,
     info: Option<String>,
