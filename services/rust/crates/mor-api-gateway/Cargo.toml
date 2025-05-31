@@ -14,3 +14,4 @@ dotenvy = { git = "https://github.com/allan2/dotenvy.git", features = ["macros"]
 thiserror = "2.0.12"
 diesel = { version = "2.2.10" }
 diesel-async = { version = "0.5.2", features = ["mysql", "deadpool"] }
+web-user-identity = { path = "../web-user-identity" }
