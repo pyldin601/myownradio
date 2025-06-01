@@ -82,8 +82,9 @@ pub(crate) async fn login(
         },
     };
     let signature = legacy::sign_legacy_claims(&claims, &config.auth_legacy_session_secret_key);
-
     let session_cookie = CookieBuilder::new(LEGACY_SESSION_COOKIE_NAME, signature)
+        .path("/")
+        .http_only(true)
         .expires(OffsetDateTime::now_utc() + DURATION_YEAR)
         .finish();
 
