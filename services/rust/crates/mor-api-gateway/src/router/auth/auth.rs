@@ -132,6 +132,8 @@ pub(crate) async fn logout(
     let _ = sessions::delete(&legacy_claims.data.token, &mut conn).await?;
 
     let expired_cookie = CookieBuilder::new(LEGACY_SESSION_COOKIE_NAME, "")
+        .path("/")
+        .http_only(true)
         .expires(OffsetDateTime::now_utc())
         .finish();
 
