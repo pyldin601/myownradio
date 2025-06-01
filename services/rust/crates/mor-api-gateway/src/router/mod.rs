@@ -60,6 +60,7 @@ pub(crate) fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/auth")
             .service(web::resource("/login").post(auth::auth::login))
+            .service(web::resource("/logout").post(auth::auth::logout))
             .service(web::resource("/signup").post(auth::auth::signup))
             .service(web::resource("/reset-password").post(auth::auth::reset_password)),
     );

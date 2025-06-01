@@ -105,6 +105,39 @@ pub(crate) async fn login(
     Ok(HttpResponse::Ok().cookie(session_cookie).finish())
 }
 
+pub(crate) async fn logout(
+    req: HttpRequest,
+    config: web::Data<Config>,
+    pool: web::Data<DbPool>,
+) -> Response {
+    let session_cookie_value = match req.cookie(LEGACY_SESSION_COOKIE_NAME) {
+        Some(cookie) => cookie.value().to_string(),
+        None => {
+            return Ok(HttpResponse::Unauthorized().finish());
+        }
+    };
+
+    let legacy_claims = match legacy::verify_legacy_claims(
+        &session_cookie_value,
+        &config.auth_legacy_session_secret_key,
+    ) {
+        Some(claims) => claims,
+        None => {
+            return Ok(HttpResponse::Unauthorized().finish());
+        }
+    };
+
+    let mut conn = pool.get_connection().await?;
+
+    let _ = sessions::delete(&legacy_claims.data.token, &mut conn).await?;
+
+    let expired_cookie = CookieBuilder::new(LEGACY_SESSION_COOKIE_NAME, "")
+        .expires(OffsetDateTime::now_utc())
+        .finish();
+
+    Ok(HttpResponse::Ok().cookie(expired_cookie).finish())
+}
+
 #[derive(serde::Deserialize)]
 pub(crate) struct ResetPasswordRequestBody {
     email: String,

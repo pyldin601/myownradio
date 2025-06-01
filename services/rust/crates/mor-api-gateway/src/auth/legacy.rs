@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 pub(crate) fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
     bcrypt::hash(password, bcrypt::DEFAULT_COST)
 }
@@ -23,6 +25,19 @@ pub(crate) fn sign_legacy_claims(claims: &TokenClaims, legacy_secret_key: &str) 
     let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::HS256);
 
     jsonwebtoken::encode(&header, &claims, &key).expect("Unable to sign legacy claims")
+}
+
+pub(crate) fn verify_legacy_claims(token: &str, legacy_secret_key: &str) -> Option<TokenClaims> {
+    let key = jsonwebtoken::DecodingKey::from_secret(legacy_secret_key.as_ref());
+    let mut validation = jsonwebtoken::Validation::default();
+
+    validation.validate_exp = false;
+    validation.required_spec_claims = HashSet::new();
+
+    match jsonwebtoken::decode::<TokenClaims>(token, &key, &validation) {
+        Ok(data) => Some(data.claims.clone()),
+        Err(_) => None,
+    }
 }
 
 pub(crate) fn generate_unique_id() -> String {
