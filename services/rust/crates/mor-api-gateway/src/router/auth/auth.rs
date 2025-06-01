@@ -88,7 +88,7 @@ pub(crate) async fn login(
         .expires(OffsetDateTime::now_utc() + DURATION_YEAR)
         .finish();
 
-    Ok(HttpResponse::Ok().cookie(session_cookie).json(user))
+    Ok(HttpResponse::Ok().cookie(session_cookie).finish())
 }
 
 #[derive(serde::Deserialize)]
