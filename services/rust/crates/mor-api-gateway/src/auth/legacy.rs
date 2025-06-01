@@ -24,3 +24,37 @@ pub(crate) fn sign_legacy_claims(claims: &TokenClaims, legacy_secret_key: &str) 
 
     jsonwebtoken::encode(&header, &claims, &key).expect("Unable to sign legacy claims")
 }
+
+pub(crate) fn generate_unique_id() -> String {
+    use rand::Rng;
+
+    static ID_CHARACTERS: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    static UNIQUE_ID_LENGTH: usize = 8;
+
+    let mut rng = rand::rng();
+
+    (0..UNIQUE_ID_LENGTH)
+        .map(|_| {
+            let idx = rng.random_range(0..ID_CHARACTERS.len());
+            char::from(ID_CHARACTERS[idx])
+        })
+        .collect()
+}
+
+pub(crate) fn uniqid(prefix: &str, more_entropy: bool) -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let micros = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_micros();
+
+    let mut id = format!("{}{:x}", prefix, micros);
+
+    if more_entropy {
+        let entropy: f64 = rand::random();
+        id.push_str(&format!("{:x}", (entropy * 0xfffff as f64) as u64));
+    }
+
+    id
+}

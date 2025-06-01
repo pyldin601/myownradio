@@ -4,7 +4,8 @@ use crate::db::{sessions, users, DbPool};
 use crate::response::Response;
 use actix_web::cookie::time::OffsetDateTime;
 use actix_web::cookie::CookieBuilder;
-use actix_web::{web, HttpResponse};
+use actix_web::dev::ConnectionInfo;
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{TimeDelta, Utc};
 use std::ops::Add;
 use tracing::error;
@@ -33,6 +34,8 @@ pub(crate) async fn login(
     body: web::Json<LoginRequestBody>,
     pool: web::Data<DbPool>,
     config: web::Data<Config>,
+    req: HttpRequest,
+    conn_info: ConnectionInfo,
 ) -> Response {
     let LoginRequestBody { email, password } = body.into_inner();
 
@@ -61,17 +64,28 @@ pub(crate) async fn login(
     }
 
     let token = uuid::Uuid::new_v4().to_string().replace("-", "");
-    let session_id = uuid::Uuid::new_v4().to_string();
+    let session_id = legacy::uniqid("", false);
+    let ip = conn_info
+        .realip_remote_addr()
+        .unwrap_or_default()
+        .to_string();
+    let http_user_agent = req
+        .headers()
+        .get("User-Agent")
+        .and_then(|val| val.to_str().ok())
+        .unwrap_or("")
+        .to_string();
+
     let session = sessions::Session {
         token,
         session_id,
         uid: user.uid,
-        ip: String::default(),
+        ip,
         permanent: 1,
         authorized: Utc::now().naive_utc(),
         expires: Some(Utc::now().add(TIME_DELTA_YEAR).naive_utc()),
-        client_id: String::default(),
-        http_user_agent: String::default(),
+        client_id: legacy::generate_unique_id(),
+        http_user_agent,
     };
     sessions::create(&session, &mut conn).await?;
 

@@ -1768,6 +1768,7 @@ dependencies = [
  "dotenvy",
  "envy",
  "jsonwebtoken",
+ "rand 0.9.1",
  "serde",
  "thiserror 2.0.12",
  "tracing",
