@@ -20,6 +20,19 @@ pub(crate) async fn get_user(path: web::Path<i32>, pool: web::Data<DbPool>) -> R
     Ok(HttpResponse::Ok().json(user))
 }
 
+pub(crate) async fn get_user_by_email(
+    path: web::Path<String>,
+    pool: web::Data<DbPool>,
+) -> Response {
+    let email = path.into_inner();
+    let mut conn = pool.get_connection().await?;
+    let user = users::get_by_email(&email, &mut conn)
+        .await?
+        .ok_or(Error::EntityNotFound)?;
+
+    Ok(HttpResponse::Ok().json(user))
+}
+
 pub(crate) async fn create_user(json: web::Json<UserInput>, pool: web::Data<DbPool>) -> Response {
     let user_input = json.into_inner();
     let mut conn = pool.get_connection().await?;
