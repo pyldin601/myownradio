@@ -3,7 +3,6 @@ use actix_http::{BoxedPayloadStream, Payload};
 use actix_web::error::ErrorBadRequest;
 use actix_web::{FromRequest, HttpRequest};
 use futures::future::{Ready, err, ok};
-use tracing::warn;
 
 impl FromRequest for UserId {
     type Error = actix_web::Error;
@@ -18,10 +17,7 @@ impl FromRequest for UserId {
                     .and_then(|header| header.parse::<i32>().ok())
             }) {
                 Some(user_id) => UserId(user_id),
-                _ => {
-                    warn!("Bad request: no user-id header");
-                    return err(ErrorBadRequest(String::new()));
-                }
+                None => return err(ErrorBadRequest(String::from("no user-id header"))),
             },
         ))
     }
