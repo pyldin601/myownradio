@@ -10,6 +10,8 @@ use chrono::{TimeDelta, Utc};
 use std::ops::Add;
 use tracing::error;
 
+// TODO Response can be web::Json(T)
+
 const LEGACY_SESSION_COOKIE_NAME: &str = "secure_session";
 const DURATION_YEAR: std::time::Duration = std::time::Duration::from_secs(31_536_000);
 const TIME_DELTA_YEAR: TimeDelta = TimeDelta::days(365);
@@ -112,9 +114,7 @@ pub(crate) async fn logout(
 ) -> Response {
     let session_cookie_value = match req.cookie(LEGACY_SESSION_COOKIE_NAME) {
         Some(cookie) => cookie.value().to_string(),
-        None => {
-            return Ok(HttpResponse::Unauthorized().finish());
-        }
+        None => return Ok(HttpResponse::Unauthorized().finish()),
     };
 
     let legacy_claims = match legacy::verify_legacy_claims(
@@ -122,9 +122,7 @@ pub(crate) async fn logout(
         &config.auth_legacy_session_secret_key,
     ) {
         Some(claims) => claims,
-        None => {
-            return Ok(HttpResponse::Unauthorized().finish());
-        }
+        None => return Ok(HttpResponse::Unauthorized().finish()),
     };
 
     let mut conn = pool.get_connection().await?;
