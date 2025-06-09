@@ -1,11 +1,11 @@
-FROM rust:1.87 as devenv
+FROM rust:1.87 AS devenv
 
 ARG USER=1000:1000
 
 WORKDIR /code/
 
 
-FROM rust:1.87 as build
+FROM rust:1.87 AS build
 
 WORKDIR /code/
 
