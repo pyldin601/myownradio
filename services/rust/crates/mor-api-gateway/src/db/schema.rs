@@ -108,3 +108,19 @@ diesel::table! {
         files_count -> Integer
     }
 }
+
+diesel::table! {
+    r_sessions (token) {
+        token -> VarChar,
+        uid -> Integer,
+        ip -> VarChar,
+        client_id -> VarChar,
+        authorized -> Timestamp,
+        http_user_agent -> VarChar,
+        session_id -> VarChar,
+        permanent -> TinyInt,
+        expires -> Nullable<Timestamp>
+    }
+}
+
+diesel::joinable!(r_sessions -> r_users (uid));
