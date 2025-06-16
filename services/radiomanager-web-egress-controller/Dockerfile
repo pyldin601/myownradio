@@ -1,11 +1,11 @@
-FROM rust:1.73 as devenv
+FROM rust:1.87 as devenv
 
 ARG USER=1000:1000
 
 WORKDIR /code/
 
 
-FROM rust:1.73 as build
+FROM rust:1.87 as build
 
 WORKDIR /code/
 
@@ -15,7 +15,7 @@ COPY src ./src
 
 RUN cargo build --release
 
-FROM rust:1.73
+FROM rust:1.87
 
 COPY --from=build /code/target/release/radiomanager-web-egress-controller /radiomanager-web-egress-controller
 
