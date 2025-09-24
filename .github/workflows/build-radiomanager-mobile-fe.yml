@@ -1,0 +1,27 @@
+name: Trigger radiomanager-mobile-fe build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/radiomanager-mobile-fe/**'
+
+jobs:
+  main:
+    name: Main
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger "pldin601/radiomanager-mobile-fe" build
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: build-image
+          client-payload: |
+            {
+              "image_name": "pldin601/radiomanager-mobile-fe",
+              "dockerfile": "services/radiomanager-mobile-fe/Dockerfile",
+              "context": "services/radiomanager-mobile-fe",
+              "token": "${{ secrets.REPO_ACCESS_TOKEN }}"
+            }

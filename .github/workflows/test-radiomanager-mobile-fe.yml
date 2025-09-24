@@ -1,0 +1,23 @@
+name: Test radiomanager-frontend build
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'services/radiomanager-mobile-fe/**'
+      - '.github/workflows/test-radiomanager-mobile-fe.yml'
+
+jobs:
+  main:
+    name: Test radiomanager-mobile-fe build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+      - run: |
+          npm ci
+          npm run build --if-present
+        working-directory: 'services/radiomanager-mobile-fe'
