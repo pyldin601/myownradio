@@ -18,7 +18,7 @@ fi
 
 # Clone the wiki repository
 echo "Cloning wiki repository..."
-git clone "https://github.com/$REPO.wiki.git" "$WIKI_DIR" || {
+git clone "git@github.com:$REPO.wiki.git" "$WIKI_DIR" || {
     echo "Error: Could not clone wiki repository."
     echo "Please ensure:"
     echo "1. The wiki is enabled in repository settings"
@@ -58,6 +58,7 @@ fi
 # Commit and push
 echo "Committing changes..."
 git add API-Documentation.md Home.md
+git config commit.gpgsign false
 git commit -m "Add API Documentation" || echo "No changes to commit"
 git push origin master || git push origin main
 
