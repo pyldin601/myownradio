@@ -37,7 +37,7 @@ services:
       - --api.dashboard=true
       - --api.insecure=true
   db:
-    image: mysql:8.0.29-oracle
+    image: mysql:8.4.8-oracle
     environment:
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_DATABASE: "mor"
