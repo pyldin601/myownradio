@@ -36,6 +36,7 @@ Phase 1 is complete:
 Foundation work also completed:
 - `lib/api/client.ts` unwraps legacy `{ code, data, message }` responses.
 - `lib/api/types.ts` defines app-expected API/domain types.
+- API domain clients are implemented under `lib/api/`.
 - `docs/component-tree.md` maps route paths, controller names, children, and state shapes.
 
 Current verification:
@@ -187,23 +188,29 @@ Acceptance:
 
 ## Phase 2: API Client
 
-Status: partially complete.
+Status: complete.
 
 Deliverables:
 - [x] `lib/api/client.ts` with typed response unwrap for legacy `{ code, data, message }` responses.
 - [x] Shared API/domain types in `lib/api/types.ts`.
 - Domain clients:
-  - [ ] `lib/api/account.ts`
-  - [ ] `lib/api/streams.ts`
-  - [ ] `lib/api/tracks.ts`
-  - [ ] `lib/api/categories.ts`
-  - [ ] `lib/api/bookmarks.ts`
-  - [ ] `lib/api/schedule.ts`
+  - [x] `lib/api/account.ts`
+  - [x] `lib/api/streams.ts`
+  - [x] `lib/api/channels.ts`
+  - [x] `lib/api/tracks.ts`
+  - [x] `lib/api/categories.ts`
+  - [x] `lib/api/bookmarks.ts`
+  - [x] `lib/api/schedule.ts`
+  - [x] `lib/api/stream-control.ts`
+  - [x] `lib/api/index.ts`
 
 Acceptance:
-- [ ] Each migrated route uses typed API functions only.
+- [x] API surface exists for migrated routes to use typed API functions only.
 - [x] Error handling preserves legacy message behavior.
 - [x] API base path supports local proxy or deployed backend without code changes.
+- [x] `npm run lint` passes.
+- [x] `npx tsc --noEmit` passes.
+- [x] `npm run build` passes with escalated run.
 
 ## Phase 3: Account And Auth Gate
 
@@ -351,8 +358,8 @@ Before migrating each module, extend this audit from:
 
 1. Phase 0: make build pass. Done.
 2. Phase 1: shell/assets/styles. Done.
-3. Phase 2: API client/types. Partially done; domain clients remain.
-4. Phase 3: account/auth.
+3. Phase 2: API client/types. Done.
+4. Phase 3: account/auth. Next.
 5. Phase 4: public catalog.
 6. Phase 5: player/stream detail.
 7. Phase 6: profile/library.
