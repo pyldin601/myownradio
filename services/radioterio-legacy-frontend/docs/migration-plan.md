@@ -26,6 +26,13 @@ Phase 0 is complete:
 - `app/page.tsx` renders a minimal Radioterio shell instead of the default Next.js scaffold.
 - `app/globals.css` is the single global CSS baseline; Tailwind is not imported.
 
+Phase 1 is complete:
+- Legacy runtime assets are copied under `public/legacy/`.
+- Legacy global CSS files are imported from `app/globals.css`.
+- Asset URLs in copied CSS point at `/legacy/...`.
+- Shared layout components exist under `components/layout/`.
+- The home route uses the shared shell instead of defining header/footer inline.
+
 Foundation work also completed:
 - `lib/api/client.ts` unwraps legacy `{ code, data, message }` responses.
 - `lib/api/types.ts` defines app-expected API/domain types.
@@ -161,19 +168,22 @@ Note:
 
 ## Phase 1: Legacy Asset And Global Style Baseline
 
-Status: next.
+Status: complete.
 
 Deliverables:
-- Copy required images/fonts/icons to `public/legacy/`.
-- Create one global stylesheet for migrated legacy UI, imported from `app/globals.css`.
-- Start from legacy global CSS/LESS output and rewrite asset URLs to `public/legacy/` paths.
-- Preserve legacy class names in React components instead of translating the UI to Tailwind utility classes.
-- Build shared app layout components: header, nav, footer, main content wrapper.
+- [x] Copy required images/fonts/icons to `public/legacy/`.
+- [x] Create one global stylesheet for migrated legacy UI, imported from `app/globals.css`.
+- [x] Start from legacy global CSS/LESS output and rewrite asset URLs to `public/legacy/` paths.
+- [x] Preserve legacy class names in React components instead of translating the UI to Tailwind utility classes.
+- [x] Build shared app layout components: header, nav, footer, main content wrapper.
 
 Acceptance:
-- Home route visually resembles legacy shell enough to host migrated screens.
-- No runtime references to `../backend/public/*`.
-- No Tailwind utility rewrite of legacy screens.
+- [x] Home route visually resembles legacy shell enough to host migrated screens.
+- [x] No runtime references to `../backend/public/*`.
+- [x] No Tailwind utility rewrite of legacy screens.
+- [x] `npm run lint` passes.
+- [x] `npx tsc --noEmit` passes.
+- [x] `npm run build` passes with escalated run.
 
 ## Phase 2: API Client
 
@@ -340,7 +350,7 @@ Before migrating each module, extend this audit from:
 ## Suggested Order
 
 1. Phase 0: make build pass. Done.
-2. Phase 1: shell/assets/styles. Next.
+2. Phase 1: shell/assets/styles. Done.
 3. Phase 2: API client/types. Partially done; domain clients remain.
 4. Phase 3: account/auth.
 5. Phase 4: public catalog.
