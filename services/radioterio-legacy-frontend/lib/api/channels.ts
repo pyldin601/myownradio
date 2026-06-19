@@ -3,6 +3,7 @@ import type {
   ChannelDetailResponse,
   ChannelListResponse,
   LegacyId,
+  LegacyApiEnvelope,
   Stream,
 } from "./types";
 
@@ -53,8 +54,19 @@ export function getSearchChannels(
   });
 }
 
-export function getSuggestChannels(query: string) {
-  return apiGet<Stream[]>("/api/v2/channels/suggest", { query });
+export async function getSuggestChannels(query: string, signal?: AbortSignal) {
+  const params = new URLSearchParams({ query });
+  const response = await fetch(`/api/v2/channels/suggest?${params}`, {
+    credentials: "same-origin",
+    signal,
+  });
+  const envelope = (await response.json()) as LegacyApiEnvelope<Stream[]>;
+
+  if (!response.ok || envelope.code !== 1) {
+    throw new Error(envelope.message || response.statusText);
+  }
+
+  return envelope.data;
 }
 
 export function getTagChannels(tag: string, params: ChannelListParams = {}) {
