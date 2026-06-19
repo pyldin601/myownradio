@@ -24,6 +24,15 @@ type AppShellState = {
 };
 ```
 
+Layout variants:
+
+| Variant | Body class | Footer | Used by |
+| --- | --- | --- | --- |
+| Home | `image` (background photo) | transparent | `app/(home)/layout.tsx` -> `/` |
+| App | no `image` (white) | blue | `app/(app)/layout.tsx` -> all other routes |
+
+Next.js 16 enforces one root layout per tree. The two variants live as sibling route groups, each owning its own root layout. Cross-navigation between groups triggers a full page reload.
+
 ```ts
 type AccountState = {
   authorized: boolean;
@@ -97,11 +106,16 @@ type ChannelActions = {
 | `/recent/` | `ChannelListRecentRoute` | `ChannelListRecent` | `StreamListPageHeader`, `StreamCardGrid`, `LoadMoreSentinel` | `ChannelListState` |
 | `/bookmarks/` | `ChannelListBookmarksRoute` | `ChannelListBookmarks` | `StreamListPageHeader`, `StreamCardGrid`, `LoadMoreSentinel` | `ChannelListState` |
 | `/my/` | `ChannelListMeRoute` | `ChannelListMe` | `UserStreamsHeader`, `StreamCardGrid`, `LoadMoreSentinel` | `ChannelListState & { name: string; user: User }` |
-| `/streams/:key` | `ChannelViewRoute` | `ChannelView` | `StreamHero`, `StreamAudioSettings`, `StreamTimeline`, `TagList`, `SimilarStreams`, `ShareChannelDialog` | `ChannelViewState` |
+| `/streams/:key` | `ChannelViewRoute` | `ChannelView` | `StreamHero`, `StreamAudioSettings`, `StreamTimeline`, `TagList`, `SimilarStreams`, `ShareChannelDialog` | `ChannelViewState` (channel from `/api/v2/channels/one`, similar from `/api/v2/channels/similar`) |
 
 ```ts
 type ChannelViewState = {
-  data: ChannelDetailWithSimilarResponse;
+  // Channel detail (`/api/v2/channels/one`) and the similar list
+  // (`/api/v2/channels/similar`) are fetched in parallel on the server.
+  // `ChannelDetailWithSimilarResponse` is only used by the AngularJS
+  // single-request endpoint (`/api/v2/streams/getOneWithSimilar`).
+  channel: ChannelDetailResponse;
+  similar: { channels: LegacyList<Stream> };
   scheduleShown: boolean;
   schedule: {
     source: ScheduleItem[] | null;

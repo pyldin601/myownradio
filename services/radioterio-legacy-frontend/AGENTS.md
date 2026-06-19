@@ -15,7 +15,7 @@ Legacy source lives in `../backend`:
 - AngularJS app shell: `../backend/application/tmpl/frontend/index.tmpl`
 - AngularJS modules: `../backend/public/js/mor-modules/`
 - Legacy views/templates: `../backend/public/views/`
-- Legacy styles/assets: `../backend/public/css/`, `../backend/public/images/`, `../backend/public/icomoon/`, `../backend/public/fonts/`
+- Legacy styles/assets: `../backend/public/css/`, `../backend/public/images/`, `../backend/icomoon/`, `../backend/public/fonts/`
 - Existing migration notes: `../backend/MIGRATION_PLAN.md`, `../backend/MIGRATION_SPEC.md`
 
 Target app is this service:
@@ -47,6 +47,18 @@ Before using an unfamiliar Next.js API, check local docs under `node_modules/nex
 - If copied legacy CSS contains syntax that Next cannot parse, remove only the unsupported compatibility declaration from the Next copy, and document that transformation. Do not replace it with new layout behavior.
 - After CSS changes, compare the local page against `https://radioter.io/` with the same viewport and check computed positions for the changed elements before calling the change done.
 
+## Layout Splits (Route Groups)
+
+The legacy shell renders two distinct page variants driven by `<body class="image">` on the home route only. The Next app splits the root layout to match:
+
+- `app/(home)/layout.tsx` — root layout for `/` only. Renders `<body className="image">`, the bg image and the transparent footer that the home hero relies on. Contains `app/(home)/page.tsx`.
+- `app/(app)/layout.tsx` — root layout for all other routes (`/streams/[id]`, `/search/[query]`, etc.). Renders `<body>` without `.image`, so the white page background and blue footer from legacy CSS apply.
+- `app/layout.tsx` does not exist. Each group owns its own root layout.
+
+Per Next.js 16 docs, navigating between root layouts triggers a full page reload. That is acceptable for parity because the legacy SPA was a full AngularJS bootstrap anyway.
+
+When migrating a legacy route that needs the home variant, place it under `app/(home)/`. Everything else goes under `app/(app)/`.
+
 ## Migration Workflow
 
 For each feature/page:
@@ -64,7 +76,7 @@ For each feature/page:
 - Put reusable UI in `components/`.
 - Put hooks in `hooks/`.
 - Put API clients/services in `lib/api/`.
-- Put shared types in `types/`.
+- Put shared types in `types/` (currently inlined in `lib/api/types.ts`).
 - Put copied legacy assets in `public/legacy/` when they need public URLs.
 - Keep API logic out of React components.
 
@@ -84,6 +96,16 @@ For each feature/page:
 - Normalize backend responses at API boundary, not inside components.
 - Keep auth/session behavior equivalent to legacy `Account`, `User`, and bookmark flows.
 - Treat upload, stream scheduling, and audio playback as high-risk paths. Port with focused tests or manual verification notes.
+- When porting an AngularJS view, confirm which backend endpoint the legacy controller actually used. The legacy AngularJS wiring does not always match the most obvious PHP handler name; cross-check with `../backend/public/js/mor-modules/controllers/*.js` before assuming endpoint shape.
+
+### Endpoint Contract Notes
+
+Backend response envelopes always use `{ code: 1 | 0, data, message? }`. `lib/api/client.ts` parses this once and returns `data`.
+
+- `/api/v2/channels/one` -> `{ channel: Stream, owner: User }`. Use this for the single-channel view (`catalog/single-stream.html`).
+- `/api/v2/channels/similar` -> `{ channels: { items: Stream[] } }`. Use this for the similar-stations list. Errors are non-fatal for the page; render an empty list on failure.
+- `/api/v2/streams/getOneWithSimilar` -> `{ stream: Stream, similar: Stream[], comments }`. **Do not use for the page-level view.** This endpoint exists because the AngularJS `ChannelView` controller needed both the channel and similar streams from a single request. In Next.js, fetch them in parallel; the PHP comment column is currently unused and should be fetched separately if a comments widget is added later.
+- `/api/v2/self` -> proxied through `app/api/v2/self/route.ts` because the route handler must forward the incoming `cookie` header for `AccountSession.user` to resolve.
 
 ## UI Rules
 

@@ -328,18 +328,41 @@ Acceptance:
 
 ## Endpoint Audit Starter
 
-Known endpoints from current scan:
-- `/api/v2/streams/getOne`
-- `/api/v2/streams/getList`
-- `/api/v2/streams/getSimilarTo`
-- `/api/v2/streams/getOneWithSimilar`
-- `/api/v2/streams/getStreamsByUser`
-- `/api/v2/streams/getBookmarks`
-- `/api/v2/streams/getSchedule`
-- `/api/v2/streams/getNowPlaying`
-- `/api/v2/stream/modify`
-- `/api/v2/stream/create`
-- `/api/v2/stream/delete`
+Single-channel view uses the `/channels/*` namespace, not `/streams/*`. The legacy AngularJS controllers (`controllers.channels.js`) wired `ChannelView` to `/api/v2/channels/one` for the channel detail and `/api/v2/channels/similar` for the similar list. `/api/v2/streams/getOneWithSimilar` exists for a single-request AngularJS wiring and is not the right shape for the React page; only the legacy SPA needed it.
+
+Channels endpoints currently in use or planned:
+- `/api/v2/channels/one` -> `{ channel: Stream, owner: User }`. Channel detail.
+- `/api/v2/channels/all` -> `{ channels: { items: Stream[] } }`. Catalog.
+- `/api/v2/channels/new` -> `{ channels: { items: Stream[] } }`. Newest.
+- `/api/v2/channels/popular` -> `{ channels: { items: Stream[] } }`. Popular.
+- `/api/v2/channels/recent` -> `{ channels: { items: Stream[] } }`. Recently played.
+- `/api/v2/channels/category` -> `{ channels: { items: Stream[] }, category: Category }`.
+- `/api/v2/channels/tag` -> `{ channels: { items: Stream[] } }`.
+- `/api/v2/channels/user` -> `{ channels: { items: Stream[] }, user: User }`.
+- `/api/v2/channels/my` -> `{ channels: { items: Stream[] }, user: User }`.
+- `/api/v2/channels/bookmarks` -> `{ channels: { items: Stream[] } }`.
+- `/api/v2/channels/search` -> `{ channels: { items: Stream[] } }`.
+- `/api/v2/channels/suggest` -> `Stream[]`. Header live suggest.
+- `/api/v2/channels/similar` -> `{ channels: { items: Stream[] } }`. Similar to a given channel.
+
+Streams endpoints (track scheduling and ownership flows):
+- `/api/v2/streams/getOne` -> `Stream`. Single channel object only.
+- `/api/v2/streams/getList` -> `{ streams: Stream[] }`.
+- `/api/v2/streams/getSimilarTo` -> `Stream[]`.
+- `/api/v2/streams/getOneWithSimilar` -> `{ stream: Stream, similar: Stream[], comments }`. Use only when both views are needed in one request; avoid for the page-level view.
+- `/api/v2/streams/getStreamsByUser` -> `{ streams?: Stream[], user?: User }`.
+- `/api/v2/streams/getBookmarks` -> `Stream[]`.
+- `/api/v2/streams/getSchedule` -> `ScheduleItem[]`.
+- `/api/v2/streams/getNowPlaying` -> `NowPlaying`.
+- `/api/v2/stream/modify`, `/api/v2/stream/create`, `/api/v2/stream/delete`.
+- `/api/v2/stream/changeCover`, `/api/v2/stream/removeCover`.
+- `/api/v2/stream/addTracks`, `/api/v2/stream/removeTracks`, `/api/v2/stream/moveTrack`.
+- `/api/v2/control/play`, `/api/v2/control/stop`, `/api/v2/control/shuffle`, `/api/v2/control/setCurrentTrack`.
+
+Account/self endpoints:
+- `/api/v2/self` -> `{ user: User, streams: Stream[], client_id: string }`. Route handler must forward cookies to the legacy backend.
+- `/api/v2/self/changePassword`, `/api/v2/self`, `/api/v2/self/delete`.
+- `/api/v2/user/login`, `/api/v2/user/fbLogin`, `/api/v2/user/signUpBegin`, `/api/v2/user/signUpComplete`, `/api/v2/user/passwordResetBegin`, `/api/v2/user/passwordResetComplete`.
 
 Before migrating each module, extend this audit from:
 - `../backend/public/js/mor-modules/api/*.js`
@@ -365,3 +388,12 @@ Before migrating each module, extend this audit from:
 7. Phase 6: profile/library.
 8. Phase 7: uploads.
 9. Phase 8: cleanup/verification.
+
+
+## Known Issues And Gotchas
+
+- **`<body class="image">` is per-route.** The legacy home renders the photo background and transparent footer. Other pages use the white page background and the blue footer. `app/(home)/layout.tsx` sets `className="image"` on `<body>`; `app/(app)/layout.tsx` does not. Do not move the home route under `(app)`.
+- **Route group navigation triggers full reloads.** Next.js 16 reloads when crossing between multiple root layouts. This matches the legacy SPA's full AngularJS bootstrap and is acceptable for parity.
+- **Cookies for self endpoint.** `app/api/v2/self/route.ts` must forward the incoming `cookie` header; otherwise `AccountSession.user` is always null and the owner-only tools never render.
+- **Endpoint shape drift.** `getOneWithSimilar` returns `{ stream, similar, comments }`, not `{ channel, channels }`. The channels namespace uses `channel` and `channels.items`. Confirm with `../backend/application/classes/API/REST/*.php` before assuming response keys.
+- **Storage events for the audio format picker.** The legacy `defaults.format` is per-user global state. The Next port hydrates from `localStorage` lazily; this avoids an SSR mismatch but the initial render always shows no format selected until the user opens the settings badge or selects one.

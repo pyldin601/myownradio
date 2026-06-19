@@ -827,6 +827,7 @@ body.player-visible footer {
   overflow: hidden;
 }
 .similar-streams-wrapper .title {
+  text-transform: uppercase;
   font-family: "Myriad Pro Thin";
   font-size: 24pt;
 }
