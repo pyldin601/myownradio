@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Translate } from "@/components/legacy/translate";
 import { HeaderSearchForm } from "./header-search-form";
 
 export function Header() {
@@ -7,9 +8,14 @@ export function Header() {
       <div id="hd">
         <div className="fixed-width">
           <div id="buttons">
-            <span>
-              <Link href="/login/">Login</Link>
-              <Link href="/signup">Sign up</Link>
+            <span ng-hide="account.authorized">
+              <Link href="/login" mor-tooltip="Log in to the service">
+                <Translate>Login</Translate>
+              </Link>
+              {" "}
+              <Link href="/signup" mor-tooltip="Create account">
+                <Translate>Sign Up</Translate>
+              </Link>
             </span>
           </div>
 
@@ -23,11 +29,21 @@ export function Header() {
           <HeaderSearchForm />
 
           <div id="links">
-            <Link className="border-box" href="/streams/">
-              Streams
+            <Link
+              className="border-box ng-isolate-scope"
+              href="/streams/"
+              mor-tooltip="Browse popular radio stations"
+              active-tab="^\/streams\/"
+            >
+              <Translate>Stations</Translate>
             </Link>
-            <Link className="border-box" href="/categories/">
-              Categories
+            <Link
+              className="border-box ng-isolate-scope"
+              href="/categories/"
+              mor-tooltip="Browse categories"
+              active-tab="^\/categories\/"
+            >
+              <Translate>Categories</Translate>
             </Link>
           </div>
         </div>

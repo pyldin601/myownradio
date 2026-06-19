@@ -1,15 +1,19 @@
 export function HeaderSearchForm() {
   return (
-    <div id="search">
-      <form name="search" action="/search/" noValidate>
+    <div id="search" ng-controller="SearchFormController" className="ng-scope">
+      <form name="search" action="/search/" noValidate className="ng-pristine ng-valid">
         <input
-          className="transparent"
+          className="transparent ng-pristine ng-untouched ng-valid ng-empty"
           type="text"
-          placeholder="Search stations"
+          placeholder="Search station by name or genre..."
           name="filter"
           autoComplete="off"
+          analytics-on="change"
+          analytics-event="Search"
+          analytics-category="Streams"
+          analytics-label=""
         />
-        <input type="submit" value="" aria-label="Search" />
+        <input mor-tooltip="Search" type="submit" value="" />
       </form>
     </div>
   );

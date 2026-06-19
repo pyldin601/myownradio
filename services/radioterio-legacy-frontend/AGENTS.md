@@ -37,6 +37,16 @@ Do not migrate UI to Tailwind. Prefer one global CSS file that preserves legacy 
 
 Before using an unfamiliar Next.js API, check local docs under `node_modules/next/dist/docs/`.
 
+## Legacy CSS Parity Rules
+
+- Treat legacy CSS as authoritative. Do not add local Next.js layout overrides for migrated legacy markup unless the exact rule also exists in legacy CSS or fixes a documented Next-only incompatibility.
+- Keep `app/globals.css` limited to legacy CSS imports plus framework shims required to make legacy semantics work in Next.js, such as Angular's `.ng-hide` runtime style.
+- Before adding any CSS selector in `app/globals.css`, search legacy styles first and prefer changing markup/class names to match legacy selectors instead of overriding layout.
+- Do not add responsive/mobile overrides while preserving a legacy route. The legacy app uses a fixed `width=1024` viewport and fixed-width layout; match that first.
+- Do not override header, footer, `#contents`, `.special`, `.hello-page`, `.fixed-width`, `#links`, `#buttons`, `#search`, or form control box model from Next-specific CSS. These selectors are layout-critical and must come from copied legacy CSS.
+- If copied legacy CSS contains syntax that Next cannot parse, remove only the unsupported compatibility declaration from the Next copy, and document that transformation. Do not replace it with new layout behavior.
+- After CSS changes, compare the local page against `https://radioter.io/` with the same viewport and check computed positions for the changed elements before calling the change done.
+
 ## Migration Workflow
 
 For each feature/page:

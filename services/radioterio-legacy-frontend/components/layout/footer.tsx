@@ -7,9 +7,12 @@ export function Footer() {
         <div className="footer-content fixed-width">
           <ul className="footer-content-list">
             <li>
-              <Link href="/">Home</Link> | <Link href="/streams/">Browse stations</Link>{" "}
-              | <a href="mailto:support@radioter.io">Report question</a> |{" "}
-              <a>Radioterio (ex. myownradio.biz) &copy; 2014-2026</a>
+              <Link href="/">Home</Link> | <Link href="/streams/">Browse channels</Link>{" "}
+              |{" "}
+              <a href="mailto:support@radioter.io">
+                Report problem or ask question
+              </a>{" "}
+              | <a>Radioterio (ex. myownradio.biz) &copy; 2014-2023</a>
             </li>
           </ul>
         </div>

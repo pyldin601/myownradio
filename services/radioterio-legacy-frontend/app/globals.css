@@ -1,124 +1,31 @@
-@import "../public/legacy/css/fonts.css";
-@import "../public/legacy/icomoon/style.css";
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,300,600&subset=latin,cyrillic&display=swap");
 @import "../public/legacy/css/application.css";
 @import "../public/legacy/css/common.css";
+@import "../public/legacy/css/fonts.css";
 @import "../public/legacy/css/blocks.css";
+@import "../public/legacy/icomoon/style.css";
 @import "../public/legacy/css/loadingbar.css";
 @import "../public/legacy/css/ngDialog.css";
 @import "../public/legacy/css/ngDialog-theme-default.css";
 
-:root {
-  --phase-background: #273044;
-  --phase-surface: #ffffff;
-  --phase-text: #273044;
-  --phase-accent: #a4d35a;
+[ng\:cloak],
+[ng-cloak],
+[data-ng-cloak],
+[x-ng-cloak],
+.ng-cloak,
+.x-ng-cloak,
+.ng-hide:not(.ng-hide-animate) {
+  display: none !important;
 }
 
-body {
-  color: var(--phase-text);
-  font-family: "Open Sans", Arial, Helvetica, sans-serif;
+ng\:form {
+  display: block;
 }
 
-body.image {
-  background:
-    linear-gradient(rgba(39, 48, 68, 0.76), rgba(39, 48, 68, 0.76)),
-    url("/legacy/images/radio-image.jpg") no-repeat center top fixed;
-  background-size: cover;
+.ng-animate-shim {
+  visibility: hidden;
 }
 
-.special {
-  min-height: 100vh;
-}
-
-#contents {
-  min-height: calc(100vh - 128px);
-}
-
-.home-page {
-  box-sizing: border-box;
-  padding: 120px 16px 80px;
-}
-
-.home-intro {
-  color: #ffffff;
-  max-width: 620px;
-}
-
-.home-intro h1 {
-  font-size: 44px;
-  font-weight: 300;
-  line-height: 1.15;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-}
-
-.home-intro p {
-  color: #dce3f0;
-  font-size: 18px;
-  line-height: 1.6;
-  margin-bottom: 28px;
-}
-
-.home-intro .button.secondary {
-  background-color: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-}
-
-header #logo a {
-  white-space: nowrap;
-}
-
-header #links a {
-  line-height: 64px;
-}
-
-#buttons a + a {
-  margin-left: 4px;
-}
-
-#search input[type="text"] {
-  box-sizing: content-box;
-}
-
-footer {
-  min-height: 64px;
-}
-
-footer .footer-content-list {
-  padding: 22px 16px;
-}
-
-@media (max-width: 720px) {
-  body {
-    min-width: 0;
-  }
-
-  .fixed-width {
-    max-width: none;
-    min-width: 0;
-    width: 100%;
-  }
-
-  header #search,
-  header #links {
-    display: none;
-  }
-
-  #buttons {
-    padding-right: 16px;
-  }
-
-  .home-page {
-    padding-top: 80px;
-  }
-
-  .home-intro h1 {
-    font-size: 32px;
-  }
-
-  .home-intro .button {
-    display: block;
-    margin-bottom: 8px;
-    text-align: center;
-  }
+.ng-anchor {
+  position: absolute;
 }

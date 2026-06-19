@@ -124,7 +124,7 @@ table {
   border-collapse: collapse;
   border-spacing: 0;
 }
-/* Application colors constants */
+/* Application palette constants */
 /* Defaults */
 /* Header */
 /* Header/Buttons */
@@ -567,7 +567,7 @@ translate {
   text-align: center;
   width: 100%;
 }
-@import-once "../base/colors";
+@import-once "../base/palette";
 @import-once "helpers";
 header {
   background-color: #272d43;

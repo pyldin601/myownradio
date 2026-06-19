@@ -1,23 +1,41 @@
 import Link from "next/link";
+import { Translate } from "@/components/legacy/translate";
 
 export default function HomeRoute() {
   return (
-    <main className="home-page fixed-width">
-      <section className="home-intro">
-        <h1>Your own web radio station</h1>
-        <p>
-          Phase 1 shell is ready. Legacy assets, global styles, and layout
-          components are in place for route-by-route migration.
-        </p>
-        <div className="buttons">
-          <Link className="button" href="/streams/">
-            Browse stations
-          </Link>
-          <Link className="button secondary" href="/profile/">
-            Open dashboard
-          </Link>
+    <div ng-view="" autoscroll="" className="ng-scope">
+      <div className="hello-page ng-scope">
+        <div className="fixed-width">
+          <div className="big-description">
+            <div className="dark-background">
+              <Translate>
+                Create your own web radio station
+                <br />
+                or discover dozens of existing.
+              </Translate>
+            </div>
+            <div className="main-actions">
+              <Link
+                className="page-button"
+                href="/streams/"
+                mor-tooltip="Click here to browse existing radio stations"
+              >
+                <Translate>Listen to the Radio</Translate>
+              </Link>
+              {" "}
+              <span className="only-first-element">
+                <Link
+                  className="page-button ng-scope"
+                  href="/login"
+                  ng-switch-when="false"
+                >
+                  <Translate>Log in to the service</Translate>
+                </Link>
+              </span>
+            </div>
+          </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
