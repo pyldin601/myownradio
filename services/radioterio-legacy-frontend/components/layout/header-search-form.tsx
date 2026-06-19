@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import {
+  FormEvent,
+  KeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { getSuggestChannels } from "@/lib/api/channels";
 import { apiBaseUrl } from "@/lib/api/client";
 import type { Stream } from "@/lib/api/types";
@@ -22,16 +28,17 @@ function channelArtworkUrl(cover: string) {
 }
 
 export function HeaderSearchForm() {
-  const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
   const [focused, setFocused] = useState(false);
   const [streams, setStreams] = useState<Stream[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const trimmedFilter = filter.trim();
   const showHint = focused && filter.length > 0;
+  const resultCount = 1 + streams.length;
 
   useEffect(() => {
-    function handleDocumentMouseDown(event: MouseEvent) {
+    function handleDocumentMouseDown(event: globalThis.MouseEvent) {
       setFocused(
         !!rootRef.current && rootRef.current.contains(event.target as Node),
       );
@@ -52,7 +59,10 @@ export function HeaderSearchForm() {
     const controller = new AbortController();
 
     getSuggestChannels(filter, controller.signal)
-      .then(setStreams)
+      .then((nextStreams) => {
+        setStreams(nextStreams);
+        setSelectedIndex(0);
+      })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
@@ -71,9 +81,10 @@ export function HeaderSearchForm() {
       return;
     }
 
-    router.push(`/search/${encodeURIComponent(trimmedFilter)}`);
+    window.location.assign(`/search/${encodeURIComponent(trimmedFilter)}`);
     setFilter("");
     setStreams([]);
+    setSelectedIndex(0);
     setFocused(false);
   }
 
@@ -85,6 +96,7 @@ export function HeaderSearchForm() {
   function handleStreamClick() {
     setFilter("");
     setStreams([]);
+    setSelectedIndex(0);
     setFocused(false);
   }
 
@@ -93,6 +105,73 @@ export function HeaderSearchForm() {
 
     if (value.length === 0) {
       setStreams([]);
+    }
+
+    setSelectedIndex(0);
+  }
+
+  function goSelected() {
+    if (selectedIndex === 0) {
+      goSearch();
+      return;
+    }
+
+    const stream = streams[selectedIndex - 1];
+
+    if (!stream) {
+      return;
+    }
+
+    window.location.assign(channelHref(stream));
+    setFilter("");
+    setStreams([]);
+    setSelectedIndex(0);
+    setFocused(false);
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter" && trimmedFilter.length > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (showHint) {
+        goSelected();
+      } else {
+        goSearch();
+      }
+
+      return;
+    }
+
+    if (!showHint) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      event.stopPropagation();
+      setSelectedIndex((index) => Math.min(index + 1, resultCount - 1));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      setSelectedIndex((index) => Math.max(index - 1, 0));
+      return;
+    }
+
+    if (event.key === "Escape") {
+      setFocused(false);
+    }
+  }
+
+  function handleItemMouseOver(
+    event: ReactMouseEvent<HTMLLIElement>,
+    index: number,
+  ) {
+    if (event.currentTarget.contains(event.target as Node)) {
+      setSelectedIndex(index);
     }
   }
 
@@ -121,6 +200,7 @@ export function HeaderSearchForm() {
           value={filter}
           onChange={(event) => handleFilterChange(event.target.value)}
           onFocus={() => setFocused(true)}
+          onKeyDown={handleKeyDown}
           onKeyUp={() => setFocused(true)}
           analytics-on="change"
           analytics-event="Search"
@@ -132,13 +212,22 @@ export function HeaderSearchForm() {
       {showHint ? (
         <div className="search-hint">
           <ul className="items">
-            <li className="head" onClick={goSearch}>
+            <li
+              className={`head ${selectedIndex === 0 ? "selected" : ""}`}
+              onClick={goSearch}
+              onMouseOver={(event) => handleItemMouseOver(event, 0)}
+            >
               <Link href={`/search/${encodeURIComponent(trimmedFilter)}`}>
                 Search for &quot;{filter}&quot;
               </Link>
             </li>
-            {streams.map((stream) => (
-              <li key={stream.sid} onClick={handleStreamClick}>
+            {streams.map((stream, index) => (
+              <li
+                key={stream.sid}
+                className={selectedIndex === index + 1 ? "selected" : ""}
+                onClick={handleStreamClick}
+                onMouseOver={(event) => handleItemMouseOver(event, index + 1)}
+              >
                 <Link href={channelHref(stream)}>
                   <div className="cover dark">
                     {stream.cover ? (
