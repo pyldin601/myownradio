@@ -42,6 +42,14 @@ export default function RootLayout({
 }>) {
   return (
     <html ng-app="application" ng-controller="MainController" className="ng-scope">
+      <head>
+        {/* eslint-disable-next-line @next/next/no-css-tags -- Legacy shell loads Open Sans as a stylesheet; local vendored copy avoids external font drift. */}
+        <link
+          href="/legacy/fonts/open-sans/open-sans.css"
+          rel="stylesheet"
+          type="text/css"
+        />
+      </head>
       <body
         className="image"
         mobx-autorun=""
