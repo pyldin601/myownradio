@@ -46,13 +46,22 @@ export default async function SearchPage({ params }: SearchPageProps) {
   const { query: encodedQuery } = await params;
   const query = decodeURIComponent(encodedQuery);
   const channels = await getSearchResults(query);
+  const count = channels.length;
+  const heading =
+    count === 1 ? (
+      <>
+        <b>1</b> radio station found for request <b>{query}</b>
+      </>
+    ) : (
+      <>
+        <b>{count}</b> radio stations found for request <b>{query}</b>
+      </>
+    );
 
   return (
     <div className="fixed-width">
       <div id="page-contents">
-        <div className="page-sub-title">
-          Search results for &quot;{query}&quot;
-        </div>
+        <div className="page-sub-title">{heading}</div>
         <div className="new-stream-catalog-badge">
           <ul className="new-stream-catalog">
             {channels.map((channel) => (
