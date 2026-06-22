@@ -43,6 +43,20 @@ function userProfileName(user: { name?: string | null; login: string }) {
   return user.name || user.login;
 }
 
+function trackCaption(track: {
+  artist?: string | null;
+  title?: string | null;
+  caption?: string;
+}) {
+  if (track.caption) {
+    return track.caption;
+  }
+  if (track.artist) {
+    return `${track.artist} - ${track.title ?? ""}`;
+  }
+  return track.title ?? "";
+}
+
 function parseStreamId(id: string): number | string {
   if (/^\d+$/.test(id)) {
     return Number(id);
@@ -115,6 +129,8 @@ export default async function StreamPage({ params }: StreamPageProps) {
     loadSchedule({ sid: channel.sid }),
   ]);
   const formats: AudioFormatGroups = DEFAULT_FORMATS;
+  const currentTrack = schedule?.tracks[schedule.current];
+  const initialTrackTitle = currentTrack ? trackCaption(currentTrack) : "";
 
   return (
     <>
@@ -172,7 +188,10 @@ export default async function StreamPage({ params }: StreamPageProps) {
                   />
                 </span>
               </div>
-              <PlayerToggle streamSid={channel.sid} />
+              <PlayerToggle
+                initialTrackTitle={initialTrackTitle}
+                streamSid={channel.sid}
+              />
             </div>
           </div>
         </div>
