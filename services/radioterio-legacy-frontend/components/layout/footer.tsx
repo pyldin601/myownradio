@@ -12,7 +12,7 @@ export function Footer() {
               <a href="mailto:support@radioter.io">
                 Report problem or ask question
               </a>{" "}
-              | <a>Radioterio (ex. myownradio.biz) &copy; 2014-2023</a>
+              | <a>Radioterio (ex. myownradio.biz) &copy; 2014-2026</a>
             </li>
           </ul>
         </div>
