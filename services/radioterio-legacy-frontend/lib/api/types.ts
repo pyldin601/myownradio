@@ -163,93 +163,28 @@ export type ScheduleItem = {
   color?: number | string | null;
 };
 
+export type ScheduleTrack = {
+  tid?: number;
+  unique_id?: LegacyId;
+  title?: string | null;
+  artist?: string | null;
+  duration: number;
+  time_offset: number;
+  caption?: string;
+};
+
+export type ScheduleResponse = {
+  time: number;
+  position: number;
+  range: number;
+  current: number;
+  tracks: ScheduleTrack[];
+  listeners_count?: number;
+  bookmarks_count?: number;
+};
+
 export type AccountSession = {
   user: User;
   streams: Stream[];
   client_id: string;
 };
-
-export type LoginRequest = {
-  login: string;
-  password: string;
-  save?: boolean;
-};
-
-export type SignUpRequest = {
-  email: string;
-  code?: string;
-};
-
-export type SignUpCompleteRequest = {
-  code: string;
-  login: string;
-  password: string;
-  name?: string;
-  info?: string;
-  permalink?: string;
-  country_id?: number | null;
-};
-
-export type PasswordResetBeginRequest = {
-  login: string;
-};
-
-export type PasswordResetCompleteRequest = {
-  code: string;
-  password: string;
-};
-
-export type ProfileUpdateRequest = {
-  name: string;
-  info?: string | null;
-  permalink?: string | null;
-  country_id?: number | null;
-};
-
-export type StreamMutationRequest = {
-  sid?: number;
-  name: string;
-  info?: string | null;
-  hashtags?: string | null;
-  permalink?: string | null;
-  category?: number | string | null;
-  access?: number | string | null;
-};
-
-export type ChannelListResponse = {
-  channels: LegacyList<Stream>;
-  category?: Category;
-  user?: User;
-};
-
-export type ChannelDetailResponse = {
-  channel: Stream;
-  owner: User;
-};
-
-export type ChannelDetailWithSimilarResponse = ChannelDetailResponse & {
-  channels: LegacyList<Stream>;
-};
-
-export type StreamsByUserResponse = {
-  streams?: Stream[];
-  channels?: LegacyList<Stream>;
-  user?: User;
-};
-
-export type TrackListResponse = {
-  tracks: LegacyList<Track> | Track[];
-};
-
-export type StreamTracksResponse = {
-  stream?: Stream;
-  tracks: LegacyList<Track> | Track[];
-  now?: NowPlaying | null;
-};
-
-export type UploadTrackResponse = {
-  track?: Track;
-  tracks?: Track[];
-};
-
-export type EmptyResponse = Record<string, never>;

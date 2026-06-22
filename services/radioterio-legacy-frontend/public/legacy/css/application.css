@@ -2405,3 +2405,46 @@ hashtags .tags .tag:before {
 hashtags .tags .tag:hover {
   text-decoration: line-through;
 }
+.timeline {
+  display: block;
+}
+.timeline .timeline-container {
+  margin-bottom: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+.timeline .timeline-container .timeline-wrap {
+  overflow: visible;
+  box-sizing: border-box;
+}
+.timeline .timeline-container .timeline-wrap .timeline-track {
+  border-radius: 4px;
+  position: relative;
+  opacity: 0.7;
+  background-color: #181e30;
+  display: inline-block;
+  font-size: 8pt;
+  cursor: default;
+  line-height: 20px;
+  color: #ffffff;
+  vertical-align: top;
+}
+.timeline .timeline-container .timeline-wrap .timeline-track.current {
+  opacity: 1;
+}
+.timeline .timeline-container .timeline-wrap .timeline-track .track-title {
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px 4px;
+}
+.timeline .canvas-wrap {
+  margin-bottom: 12px;
+}
+.timeline .canvas-wrap #grid {
+  height: 24px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}

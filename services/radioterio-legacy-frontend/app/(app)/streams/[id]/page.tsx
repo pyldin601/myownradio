@@ -4,12 +4,15 @@ import { ChannelTools } from "@/components/stream/channel-tools";
 import { PlayerToggle } from "@/components/stream/player-toggle";
 import { SimilarStreams } from "@/components/stream/similar-streams";
 import { TagList } from "@/components/stream/tag-list";
+import { TimelineWidget } from "@/components/stream/timeline-widget";
 import { apiGet } from "@/lib/api/client";
+import { getChannelSchedule } from "@/lib/api/schedule";
 import type {
   AccountSession,
   AudioFormatGroups,
   ChannelDetailResponse,
   ChannelListResponse,
+  ScheduleResponse,
   Stream,
 } from "@/lib/api/types";
 import { nl2br } from "@/lib/utils/nl2br";
@@ -64,6 +67,16 @@ async function loadSimilar(id: number | string): Promise<Stream[]> {
   }
 }
 
+async function loadSchedule(
+  channel: { sid: number },
+): Promise<ScheduleResponse | null> {
+  try {
+    return await getChannelSchedule(channel.sid);
+  } catch {
+    return null;
+  }
+}
+
 async function loadAccount(): Promise<AccountSession | null> {
   try {
     return await apiGet<AccountSession>("/api/v2/self");
@@ -97,7 +110,10 @@ export default async function StreamPage({ params }: StreamPageProps) {
     account?.user && owner && account.user.uid === owner.uid,
   );
   const channelKey = String(channel.permalink || channel.sid);
-  const similarItems = await loadSimilar(streamId);
+  const [similarItems, schedule] = await Promise.all([
+    loadSimilar(streamId),
+    loadSchedule({ sid: channel.sid }),
+  ]);
   const formats: AudioFormatGroups = DEFAULT_FORMATS;
 
   return (
@@ -166,6 +182,12 @@ export default async function StreamPage({ params }: StreamPageProps) {
       ) : null}
       <div className="fixed-width">
         <div className="container-padding">
+          {schedule ? (
+            <TimelineWidget
+              initialSchedule={schedule}
+              streamSid={channel.sid}
+            />
+          ) : null}
           <div className="hashtag-wrapper clearFix">
             <TagList tags={channel.hashtags} />
           </div>

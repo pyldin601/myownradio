@@ -4,7 +4,6 @@ import type {
   EmptyResponse,
   LegacyId,
   NowPlaying,
-  ScheduleItem,
   Stream,
   StreamMutationRequest,
   StreamsByUserResponse,
@@ -63,8 +62,13 @@ export function getBookmarks(offset?: number) {
   return apiGet<Stream[]>("/api/v2/streams/getBookmarks", { offset });
 }
 
+// The legacy `/api/v2/streams/getSchedule` returns a single-channel timeline
+// envelope ({ time, position, range, current, tracks }) rather than a flat
+// track array. Prefer `getChannelSchedule` from `./schedule` for the timeline
+// widget; this shim is retained for callers that still expect the legacy
+// shape and is typed loosely on purpose.
 export function getSchedule(streamID: LegacyId) {
-  return apiGet<ScheduleItem[]>("/api/v2/streams/getSchedule", {
+  return apiGet<unknown>("/api/v2/streams/getSchedule", {
     stream_id: streamID,
   });
 }
