@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ChannelCatalogList } from "@/components/stream/channel-catalog-list";
 import type { LegacyApiEnvelope, Stream } from "@/lib/api/types";
 
 const LEGACY_API_BASE_URL =
@@ -9,16 +9,6 @@ type SearchPageProps = {
     query: string;
   }>;
 };
-
-function channelHref(stream: Stream) {
-  return `/streams/${encodeURIComponent(String(stream.permalink || stream.sid))}`;
-}
-
-function channelArtworkUrl(cover: string, size: number) {
-  const path = `/content/streamcovers/${cover}?size=${size}`;
-
-  return new URL(path, LEGACY_API_BASE_URL).toString();
-}
 
 async function getSearchResults(query: string) {
   const url = new URL("/api/v2/channels/search", LEGACY_API_BASE_URL);
@@ -63,42 +53,11 @@ export default async function SearchPage({ params }: SearchPageProps) {
       <div id="page-contents">
         <div className="page-sub-title">{heading}</div>
         <div className="new-stream-catalog-badge">
-          <ul className="new-stream-catalog">
-            {channels.map((channel) => (
-              <li key={channel.sid}>
-                <div className="cover-section">
-                  <div className="cover">
-                    {channel.cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- Legacy catalog uses backend cover images directly.
-                      <img
-                        alt=""
-                        src={channelArtworkUrl(channel.cover, 200)}
-                      />
-                    ) : null}
-                  </div>
-                </div>
-                <div className="info-section">
-                  <div className="now-playing" mor-tooltip={channel.now_playing || ""}>
-                    <i className="icon-music" />
-                    {channel.now_playing}
-                  </div>
-                  <div className="stream-name">
-                    <Link href={channelHref(channel)}>{channel.name}</Link>
-                  </div>
-                  <div className="stats">
-                    <span>
-                      <i className="icon-hearing" />
-                      <span>{channel.playbacks}</span>
-                    </span>
-                    <span>
-                      <i className="icon-heart hoverable" />
-                      <span>{channel.bookmarks_count}</span>
-                    </span>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <ChannelCatalogList
+            channels={channels}
+            key={query}
+            legacyApiBaseUrl={LEGACY_API_BASE_URL}
+          />
           {channels.length === 0 ? (
             <div className="no-streams">No streams found.</div>
           ) : null}

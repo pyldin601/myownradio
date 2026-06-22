@@ -7,7 +7,7 @@ Implemented Next.js components and route handlers in this service. This map refl
 | URL | Next file | Route component | Main children | Data/API |
 | --- | --- | --- | --- | --- |
 | `/` | `app/(home)/page.tsx` | `HomeRoute` | `Translate`, legacy hero/action markup | none |
-| `/search/[query]` | `app/(app)/search/[query]/page.tsx` | `SearchPage` | search result catalog markup | `GET https://radioter.io/api/v2/channels/search?query=...` |
+| `/search/[query]` | `app/(app)/search/[query]/page.tsx` | `SearchPage` | `ChannelCatalogList` | `GET https://radioter.io/api/v2/channels/search?query=...`, `/api/v2/schedule/onSelectedChannels` |
 | `/streams/[id]` | `app/(app)/streams/[id]/page.tsx` | `StreamPage` | `ChannelTools`, `BookmarkToggle`, `PlayerToggle`, `TimelineWidget`, `TagList`, `SimilarStreams` | `/api/v2/channels/one`, `/api/v2/channels/similar`, `/api/v2/self`, `/api/v2/streams/getSchedule` |
 
 ## Layout Map
@@ -31,10 +31,11 @@ Implemented Next.js components and route handlers in this service. This map refl
 | `MainNavigation` | `components/layout/main-navigation.tsx` | server presentational | future profile/library routes | none | none |
 | `ChannelTools` | `components/stream/channel-tools.tsx` | client | `StreamPage` | `settingsOpen`, `activeFormat` | reads/writes `localStorage["mor.defaults.format"]`; links to edit/tracklist/m3u |
 | `BookmarkToggle` | `components/stream/bookmark-toggle.tsx` | client | `StreamPage` | `bookmarked`, `count`, `pending` | calls bookmark add/remove APIs |
+| `ChannelCatalogList` | `components/stream/channel-catalog-list.tsx` | client | `SearchPage` | `items`; visible sid set via `IntersectionObserver` | polls `/api/v2/schedule/onSelectedChannels` every 10s for visible rows; updates now-playing/listeners/bookmarks |
 | `PlayerToggle` | `components/stream/player-toggle.tsx` | client | `StreamPage` | `playing`; module-level shared audio/current sid | creates hidden `Audio`; plays `/flow?s=<sid>&f=<format>`; restarts on ended/error |
 | `TimelineWidget` | `components/stream/timeline-widget.tsx` | client | `StreamPage` | `schedule`, `containerWidth`; timer refs | fetches `/api/v2/streams/getSchedule?stream_id=<sid>` with sid only; draws canvas ticks; renders track blocks |
 | `TagList` | `components/stream/tag-list.tsx` | server presentational | `StreamPage`, `SimilarStreams` | none | links to `/tag/[tag]` |
-| `SimilarStreams` | `components/stream/similar-streams.tsx` | server presentational | `StreamPage` | none | renders backend cover URLs |
+| `SimilarStreams` | `components/stream/similar-streams.tsx` | client | `StreamPage` | `items`; visible sid set via `VisibleChannelItem` | polls `/api/v2/schedule/onSelectedChannels` every 10s for visible similar rows; updates now-playing |
 
 ## API And Proxy Map
 
@@ -42,6 +43,7 @@ Implemented Next.js components and route handlers in this service. This map refl
 | --- | --- | --- | --- | --- |
 | `/api/v2/channels/suggest` | `app/api/v2/channels/suggest/route.ts` | `GET` | `https://radioter.io/api/v2/channels/suggest` | Same-origin search suggestions for header. |
 | `/api/v2/self` | `app/api/v2/self/route.ts` | `GET` | `https://radioter.io/api/v2/self` | Account lookup; forwards cookies. |
+| `/api/v2/schedule/onSelectedChannels` | `app/api/v2/schedule/onSelectedChannels/route.ts` | `GET` | `https://radioter.io/api/v2/schedule/onSelectedChannels` | Visible channel-grid refresh; expects comma `stream_ids`. |
 | `/api/v2/streams/getOneWithSimilar` | `app/api/v2/streams/getOneWithSimilar/route.ts` | `GET` | `https://radioter.io/api/v2/streams/getOneWithSimilar` | Legacy compatibility proxy. |
 | `/api/v2/streams/getSchedule` | `app/api/v2/streams/getSchedule/route.ts` | `GET` | `https://radioter.io/api/v2/streams/getSchedule` | Timeline schedule proxy; expects numeric `stream_id`/sid. |
 | `/flow` | `app/flow/route.ts` | `GET` | `https://radioter.io/flow` | Audio playback redirect for listener stream. |
@@ -64,11 +66,23 @@ Implemented Next.js components and route handlers in this service. This map refl
 4. Dropdown renders search row plus stream rows.
 5. Arrow keys update `selectedIndex`; Enter navigates to selected search or stream target.
 
+## Channel List Refresh Flow
+
+1. `VisibleChannelItem` wraps each row and observes its own `<li>`.
+2. `VisibleChannelItem` yields `sid` visibility up with `onVisibilityChange(sid, visible)`.
+3. Parent list owns the visible sid queue.
+4. Every 10 seconds, visible sids are sent to `/api/v2/schedule/onSelectedChannels`.
+5. `ChannelCatalogList` updates `now_playing`, `listeners_count`, `bookmarks_count`.
+6. `SimilarStreams` updates `now_playing`.
+7. Non-visible channels are skipped, matching legacy `npRefresh` behavior.
+
 ## State Keys
 
 | State | Owner | Shape |
 | --- | --- | --- |
 | Header search | `HeaderSearchForm` | `{ filter: string; focused: boolean; streams: Stream[]; selectedIndex: number }` |
+| Channel catalog refresh | `ChannelCatalogList` | `{ items: Stream[] }` plus `visibleIds: Set<number>` |
+| Similar streams refresh | `SimilarStreams` | `{ items: SimilarStream[] }` plus `visibleIds: Set<number>` |
 | Audio format | `ChannelTools`, `PlayerToggle` | `localStorage["mor.defaults.format"]`, fallback `mp3_128k` |
 | Playback | `PlayerToggle` | `{ playing: boolean }` plus module-level `sharedAudio` and `playingStreamSid` |
 | Timeline | `TimelineWidget` | `{ schedule: ScheduleResponse; containerWidth: number }` |
@@ -81,4 +95,5 @@ Implemented Next.js components and route handlers in this service. This map refl
 | Global player bar | Not implemented; only stream page button owns playback UI. |
 | Cross-component playback state | `PlayerToggle` uses module-level audio state; no app-wide store yet. |
 | Format picker data | Stream page passes empty `formats`; legacy format options are not populated from app defaults yet. |
+| Channel list coverage | Visible-row refresh is wired for migrated `SearchPage` and stream-page similar stations; other catalog routes still need migration. |
 | Typecheck | `tsc --noEmit` is blocked by pre-existing missing API type exports in `lib/api/types.ts`. |

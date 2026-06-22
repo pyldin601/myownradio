@@ -163,6 +163,11 @@ export type ScheduleItem = {
   color?: number | string | null;
 };
 
+export type ChannelNowPlaying = ScheduleItem & {
+  listeners_count: number;
+  bookmarks_count: number;
+};
+
 export type ScheduleTrack = {
   tid?: number;
   unique_id?: LegacyId;
