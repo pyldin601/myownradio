@@ -2,100 +2,588 @@
 
 ## Purpose
 
-MyOwnRadio lets a person create an online radio channel from uploaded audio tracks.
+MyOwnRadio lets a creator host a virtual internet radio channel on the server.
 
-The service gives channel owners tools to upload tracks, arrange playback, publish a channel, and manage channel identity.
+The creator uploads audio, builds a playlist, starts playback, and shares the channel. The creator does not need to keep a personal computer online after setup.
 
-The service gives listeners tools to discover, open, and listen to public channels.
+The service produces a continuous HTTP audio stream. Playback is synchronous: every listener of one channel hears the same channel position at the same server timestamp.
 
-## Terms
+The stream behaves like a broadcast radio station:
 
-### User
+- playback runs on the server.
+- playback continues when the creator browser is closed.
+- new listeners join at the current shared channel position.
+- listeners do not control the shared channel position.
+- default stream format is MP3 at 256 kbit/s.
+- supported stream formats are MP3, AAC ADTS, and Opus.
+- MP3 streams provide current-track metadata through ICY metadata.
+- listeners can use the web player or an external internet radio player that supports one of the service stream formats.
 
-A user is a registered account holder.
-
-### Channel
-
-A channel is an online radio station owned by one user.
-
-### Track
-
-A track is an audio file uploaded by a user.
-
-### Playlist
-
-A playlist is the ordered list of tracks attached to one channel.
+## Roles
 
 ### Listener
 
-A listener is a person or client receiving channel audio.
+A listener opens and hears a channel.
 
-### Owner
+A listener can be anonymous or logged in.
 
-An owner is the user who created a channel.
+### Creator
+
+A creator is a logged-in user who owns channels and tracks.
+
+A creator uploads tracks, creates channels, arranges playlists, starts playback, invites private listeners, and shares channel links.
+
+### Invited Listener
+
+An invited listener is a logged-in listener granted access to one private channel by that channel creator.
+
+## Core Objects
+
+### Channel
+
+A channel is a server-hosted internet radio station.
+
+Each channel has exactly one creator.
+
+Each active channel has one shared playback position.
+
+### Track
+
+A track is an uploaded audio entity owned by one creator.
+
+A track references one stored audio file.
+
+Multiple tracks can reference the same stored audio file.
+
+### Playlist
+
+A playlist is the ordered list of playlist entries used to produce one channel stream.
+
+Each channel has one playlist.
+
+Playlist playback loops from last entry to first entry.
+
+### Playlist Entry
+
+A playlist entry is one track placement inside a channel playlist.
+
+The same track can appear in a playlist more than once.
 
 ### Access Mode
 
-Access mode defines who can find or listen to a channel.
+Access mode defines who can find and play a channel.
 
-Supported access modes:
+Allowed values:
 
-- `Public`: listed in discovery and playable by everyone.
-- `Unlisted`: playable by direct link and not listed in discovery.
-- `Private`: visible and playable only by owner.
+- `Public`: visible in discovery and playable by everyone.
+- `Unlisted`: playable by direct link and hidden from discovery.
+- `Private`: visible and playable only by creator and invited listeners.
+
+## Listener Product Behavior
+
+### Discover Public Channels
+
+A listener can browse public channels by:
+
+- popularity.
+- newest.
+- recently updated.
+- category.
+- tag.
+- search query.
+- creator.
+- similar channels.
+
+A public channel appears in discovery only when all conditions are true:
+
+- access mode is `Public`.
+- playlist has at least one entry.
+- channel playback is active.
+
+Search uses channel name, public link, and tags.
+
+Search results follow public channel discovery rules.
+
+Discovery ordering:
+
+- popularity: total played time descending, then playback count descending.
+- newest: channel creation time descending.
+- recently updated: last channel playback start time descending.
+- category: bookmark count descending, then total played time descending, then playback count descending.
+- tag search: tag match score descending, then total played time descending, then active listener count descending, then playback count descending.
+- text search: text match score descending, then total played time descending, then active listener count descending, then playback count descending.
+- creator channels: channel creation time descending.
+- similar channels: matching tags, excluding opened channel, max 10 results.
+
+### Open Channel
+
+A listener can open a channel by channel id or public link.
+
+Opening an active public channel shows listener view.
+
+Opening an active unlisted channel by direct link shows listener view.
+
+Opening an active private channel shows listener view only to creator and invited listeners.
+
+Opening a stopped public channel shows listener view with playback state `offline`.
+
+Opening a stopped unlisted channel by direct link shows listener view with playback state `offline`.
+
+Opening a stopped private channel shows listener view with playback state `offline` only to creator and invited listeners.
+
+Opening a missing channel returns `channel_not_found`.
+
+Opening a channel blocked by access mode returns `channel_forbidden`.
+
+### View Channel Information
+
+Listener view shows:
+
+- channel name.
+- channel description.
+- creator display name.
+- cover image.
+- tags.
+- playback state: `online` or `offline`.
+- current track title.
+- current track artist.
+- time left in current track.
+- similar channels.
+
+If current track artist is empty, artist value is empty string.
+
+If current track title is empty, title value is empty string.
+
+If channel is offline, current track fields are null and time left is null.
+
+If no similar channels exist, similar channels list is empty.
+
+### Listen to Channel
+
+A listener starts local playback from listener view.
+
+Local playback connects to channel HTTP audio stream.
+
+When listener connects:
+
+- audio starts at channel current shared position.
+- audio continues until listener disconnects, channel stops, or audio delivery fails.
+- listener pause affects only listener client.
+- listener seek does not change channel shared position.
+
+If channel is offline, playback request returns `channel_inactive`.
+
+If audio delivery fails, listener playback stops and listener view shows `playback_failed`.
+
+Listener must start playback again to reconnect after playback failure.
+
+### Use External Player
+
+A listener can open a channel stream in an external internet radio player that supports one service stream format.
+
+MP3 stream exposes ICY metadata when external player requests ICY metadata.
+
+### Receive Current-Track Metadata
+
+When ICY metadata is enabled by client, MP3 stream sends current-track metadata.
+
+Metadata value changes when channel current track changes.
+
+If current track artist and title are both empty, metadata value is empty string.
+
+### Bookmark Channel
+
+A logged-in listener can bookmark a channel.
+
+A logged-in listener can remove a bookmark.
+
+A logged-in listener can list bookmarked channels.
+
+Bookmarks do not change playback.
+
+### Private Channel Invitation
+
+A logged-in listener can open and listen to a private channel after that channel creator invites the listener.
+
+Removing invitation removes listener access to the private channel.
+
+## Creator Product Behavior
+
+### Create Account
+
+A creator registers with:
+
+- email.
+- login.
+- password.
+- display name.
+
+Registration requires email confirmation.
+
+### Log In and Log Out
+
+A creator logs in with login or email and password.
+
+A creator logs out.
+
+### Reset Password
+
+A creator requests password reset with login or email.
+
+Password reset requires valid one-time reset code.
+
+### Manage Profile
+
+A creator edits:
+
+- display name.
+- profile text.
+- public profile link.
+- country.
+- avatar.
+
+A creator deletes account after password confirmation.
+
+Deleting account removes creator-owned channels and tracks.
+
+### Upload Tracks
+
+A creator uploads one or more audio files.
+
+Accepted upload formats:
+
+- MP3.
+- FLAC.
+- AAC.
+- OGG.
+- M4A.
+- WAV.
+- MOD.
+- XM.
+- S3M.
+- STM.
+- IT.
+
+Upload limits:
+
+- max file size: 536870912 bytes.
+- max duration: 14400000 milliseconds.
+
+Each accepted file creates one track in creator library.
+
+Rejected files create no tracks.
+
+If uploaded audio content matches existing stored file hash, service creates a new track entity and reuses existing stored file.
+
+If uploaded audio content does not match existing stored file hash, service stores file and creates a track entity that references it.
+
+### Manage Track Library
+
+A creator lists all owned tracks.
+
+A creator lists unused tracks.
+
+Unused track means track is not present in any creator-owned channel playlist.
+
+A creator edits track metadata:
+
+- artist.
+- title.
+- album.
+- track number.
+- genre.
+- release date.
+- cue data.
+- buy link.
+- color group.
+- sharing permission.
+
+A creator deletes owned tracks.
+
+Deleting track removes it from all creator-owned playlists.
+
+### Create Channel
+
+A creator creates a channel.
+
+Required field:
+
+- name.
+
+Optional fields:
+
+- description.
+- tags.
+- public link.
+- category.
+- cover image.
+- access mode.
+
+Default access mode is `Public`.
+
+New channel has empty playlist and playback state `offline`.
+
+### Edit Channel
+
+A creator edits owned channel fields.
+
+A creator replaces or removes cover image.
+
+A creator changes access mode.
+
+A creator invites logged-in listeners to an owned private channel.
+
+A creator removes invited listeners from an owned private channel.
+
+### Delete Channel
+
+A creator deletes an owned channel.
+
+Deleting channel removes:
+
+- channel playlist.
+- channel playback state.
+- channel bookmarks.
+- channel invitations.
+
+Deleting channel does not delete source tracks from creator library.
+
+### Build Playlist
+
+A creator adds owned tracks to owned channel playlist.
+
+A creator adds tracks to playlist end.
+
+A creator adds tracks immediately after current track.
+
+A creator removes playlist entries.
+
+A creator moves one playlist entry to another position.
+
+A creator shuffles playlist entries.
+
+Removing playlist entry does not delete source track.
+
+### Start Channel Playback
+
+A creator starts playback for an owned channel.
+
+Start is allowed only when channel playlist has at least one entry.
+
+After start:
+
+- channel playback state becomes `online`.
+- channel has one shared playback position.
+- public channel listeners can connect when access mode is `Public`.
+- direct-link listeners can connect when access mode is `Unlisted`.
+- creator and invited listeners can connect when access mode is `Private`.
+- playback continues on server without creator browser.
+
+### Stop Channel Playback
+
+A creator stops playback for an owned channel.
+
+After stop:
+
+- channel playback state becomes `offline`.
+- channel has no current track.
+- existing listener stream connections close.
+- new listener stream connections return `channel_inactive`.
+- public channel is removed from public discovery.
+
+### Resume Channel Playback
+
+A creator resumes a stopped owned channel.
+
+Resume starts from first playlist entry.
+
+### Control Active Playback
+
+A creator changes active playback for an owned channel:
+
+- play next playlist entry.
+- play previous playlist entry.
+- play random playlist entry.
+- play selected playlist entry.
+
+Changing active playback changes shared position for all listeners.
+
+### Share Channel
+
+A creator shares:
+
+- channel page link.
+- channel stream link.
+- channel playlist file link.
+
+Shared links obey channel access mode.
+
+Private channel shared links require invited listener access.
+
+## Shared Playback Rules
+
+### Server-Side Playback
+
+Server is audio source.
+
+Creator browser is control client.
+
+Listener browser is playback client.
+
+### Shared Position
+
+Each active channel has one shared playback position.
+
+Service does not create separate playlist position per listener.
+
+All listeners of one channel resolve to same current track for same server timestamp.
+
+### Current Track Calculation
+
+Service computes current track from:
+
+- current server time.
+- channel start time.
+- channel start offset.
+- playlist entry order.
+- playlist entry durations.
+
+When playback reaches playlist end, playback continues from first playlist entry.
+
+### Schedule Data
+
+Schedule data contains:
+
+- current track.
+- upcoming track changes.
+- channel timeline.
+- now-playing data for selected channels.
+
+Timeline width is 3600000 milliseconds.
+
+Upcoming track changes are ordered by least time left in current track.
+
+## Stream Formats
+
+Supported stream formats:
+
+- MP3: `audio/mpeg`.
+- AAC ADTS: `audio/aac`.
+- Opus: `audio/opus`.
+
+Supported MP3 bitrates:
+
+- 128 kbit/s.
+- 192 kbit/s.
+- 256 kbit/s.
+- 320 kbit/s.
+
+Supported AAC ADTS bitrates:
+
+- 24 kbit/s.
+- 32 kbit/s.
+- 64 kbit/s.
+- 96 kbit/s.
+- 128 kbit/s.
+
+Supported Opus bitrates:
+
+- 96 kbit/s.
+- 128 kbit/s.
+- 256 kbit/s.
+
+## Static Catalog Data
+
+Service provides catalog data used by clients:
+
+- countries.
+- categories.
+- track color groups.
+- genres.
+- access modes.
+
+## Stats
+
+Service tracks:
+
+- active listener count.
+- channel playbacks.
+- channel bookmarks count.
+- channel listeners count.
+- creator channel count.
+- creator track count.
+- creator total track duration.
+- creator total track size.
+
+Derived counters match records that create them:
+
+- active listener count equals connected listener sessions without finished time.
+- channel bookmark count equals bookmark records for channel.
+- creator channel count equals channels owned by creator.
+- creator track count equals non-deleted tracks owned by creator.
+- creator total track duration equals sum of durations for non-deleted tracks owned by creator.
+- creator total track size equals sum of file sizes for non-deleted tracks owned by creator.
 
 ## Input Constraints
 
-All user-provided text must be trimmed before validation.
+All user-provided text is trimmed before validation.
 
 Empty text after trimming counts as missing input.
 
-The service must reject input that does not match the constraints below.
+Service rejects input that does not match constraints below.
 
-Validation errors must identify the invalid field.
+Validation errors identify invalid field.
 
-### Common Field Types
-
-#### Email
+### Email
 
 Email must:
 
 - contain one `@`.
-- contain a domain with a suffix.
-- be unique across users during registration.
+- contain a domain with suffix.
+- be unique during registration.
 
-#### Password
+### Password
+
+Password input is trimmed before validation and storage.
 
 Password must:
 
 - be at least 6 characters.
 - be at most 32 characters.
 
-#### Login
+### Login
 
 Login must:
 
 - be at least 3 characters.
 - be at most 32 characters.
 - contain only lowercase letters, digits, and `_`.
-- be unique across users.
+- be unique.
 
-#### Display Name
+### Text Fields
 
 Display name must be at most 32 characters.
 
-#### Public Link
+Profile text must be at most 4096 characters.
+
+Channel description must be at most 4096 characters.
+
+Track metadata text fields must be at most 4096 characters each.
+
+Search query must be at most 4096 characters.
+
+### Public Link
 
 Public link must:
 
 - be non-empty when provided.
 - contain only lowercase letters, digits, and `-`.
 - be unique within its resource type.
-- not conflict with a numeric resource id.
+- not conflict with numeric resource id.
 
-User public links and channel public links are separate resource types.
+Creator public links and channel public links are separate resource types.
 
-#### Identifier List
+### Identifier List
 
 Identifier list must:
 
@@ -118,7 +606,7 @@ Invalid examples:
 a,2
 ```
 
-#### Pagination
+### Pagination
 
 Pagination input must:
 
@@ -126,34 +614,38 @@ Pagination input must:
 - use integer `limit`.
 - treat missing `offset` as `0`.
 - reject negative values.
-- cap list size to the maximum defined for that list.
+- cap list size to maximum values listed below.
 
 Channel list size must not exceed 50 items per request.
 
-#### Boolean
+Channel suggestions must not exceed 5 items per request.
 
-Boolean input must accept only explicit boolean values.
+Similar channels must not exceed 10 items per request.
 
-String values such as `true`, `false`, `1`, and `0` may be accepted only when the client contract defines them for that field.
+### Boolean
 
-#### Image File
+Boolean values must be submitted as `true` or `false`.
+
+Service rejects `1`, `0`, `"true"`, `"false"`, empty string, and null for boolean fields.
+
+### Image File
 
 Image file input must:
 
 - be present when image upload is requested.
-- have an image MIME type.
-- be rejected if the MIME type is not image.
+- have image MIME type.
+- be rejected if MIME type is not image.
 
-#### Audio File
+### Audio File
 
 Audio file input must:
 
 - be present when track upload is requested.
-- use an accepted audio format.
+- use accepted upload format.
 - not exceed 536870912 bytes.
 - not exceed 14400000 milliseconds duration.
 
-### Registration Inputs
+### Registration
 
 Registration start requires:
 
@@ -174,16 +666,16 @@ Registration completion accepts:
 
 Country must exist when provided.
 
-Confirmation code must be valid and must match the email confirmation request.
+Confirmation code must match email confirmation request.
 
-### Login Inputs
+### Login
 
 Login requires:
 
 - login or email.
 - password.
 
-### Password Reset Inputs
+### Password Reset
 
 Password reset start requires:
 
@@ -194,9 +686,9 @@ Password reset completion requires:
 - reset code.
 - new password.
 
-Reset code must be valid and unused.
+Reset code must be unused and match password reset request.
 
-### Profile Inputs
+### Profile
 
 Profile edit requires:
 
@@ -214,11 +706,11 @@ Avatar upload requires:
 
 - image file.
 
-Account removal requires:
+Account deletion requires:
 
 - current password.
 
-### Channel Inputs
+### Channel
 
 Channel creation requires:
 
@@ -230,6 +722,19 @@ Channel name must:
 - be at most 32 characters.
 - not contain blocked words.
 
+Blocked words:
+
+- `shit`
+- `fuck`
+- `ass`
+- `хуй`
+- `хуя`
+- `пизда`
+- `влагалище`
+- `говно`
+- `жопа`
+- `писька`
+
 Channel creation accepts:
 
 - description.
@@ -239,7 +744,7 @@ Channel creation accepts:
 - cover image.
 - access mode.
 
-Channel edit uses the same constraints as channel creation.
+Channel edit uses same constraints as channel creation.
 
 Category must exist when provided.
 
@@ -253,7 +758,7 @@ Cover upload requires:
 
 - image file.
 
-### Tag Inputs
+### Tags
 
 Tags must:
 
@@ -261,7 +766,7 @@ Tags must:
 - not be empty after trimming.
 - be separated by comma when multiple tags are submitted in one text field.
 
-### Track Upload Inputs
+### Track Upload
 
 Track upload requires:
 
@@ -272,9 +777,9 @@ Track upload accepts:
 - target channel.
 - add-as-next flag.
 
-Target channel must be owned by the uploading user when provided.
+Target channel must be owned by creator when provided.
 
-### Track Metadata Inputs
+### Track Metadata
 
 Track edit requires:
 
@@ -293,11 +798,11 @@ Track edit accepts:
 - color group.
 - sharing permission.
 
-Every target track must be owned by the editing user.
+Every target track must be owned by creator.
 
 Color group must exist when provided.
 
-### Playlist Inputs
+### Playlist
 
 Add tracks requires:
 
@@ -315,13 +820,19 @@ Move track requires:
 - playlist entry id.
 - target index.
 
-Every target track must be owned by the channel owner.
+Every target track must be owned by channel creator.
 
-Every target playlist entry must belong to the channel.
+Every target playlist entry must belong to channel.
 
-Target index must be an integer inside the resulting playlist bounds.
+Target index must be integer inside resulting playlist bounds.
 
-### Playback Inputs
+Target index is 1-based.
+
+Minimum target index is 1.
+
+Maximum target index is playlist entry count after move.
+
+### Playback Control
 
 Playback control requires:
 
@@ -331,11 +842,11 @@ Select-track playback requires:
 
 - playlist entry id.
 
-The channel must be owned by the requesting user.
+Channel must be owned by requesting creator.
 
-The selected playlist entry must belong to the channel.
+Selected playlist entry must belong to channel.
 
-### Discovery Inputs
+### Discovery
 
 Search query must:
 
@@ -350,365 +861,49 @@ Tag browse requires:
 
 - non-empty tag.
 
-Owner browse requires:
+Creator browse requires:
 
-- existing owner id or owner public link.
+- existing creator id or creator public link.
 
 Similar-channel lookup requires:
 
 - existing channel id or channel public link.
 
-## Users
+### Invitation
 
-### Registration
+Inviting listener requires:
 
-A person can create an account with email, login, password, display name, and optional profile details.
+- channel id.
+- listener id or listener public link.
 
-Registration uses email confirmation.
+Channel must be owned by requesting creator.
 
-### Login
+Listener must be registered user.
 
-A user can log in with login or email and password.
+Removing invited listener requires:
 
-A user can log out.
-
-### Password Reset
-
-A user can request a password reset by login or email.
-
-Password reset uses a one-time reset code sent by email.
-
-### Profile
-
-A user can edit:
-
-- display name.
-- profile text.
-- public profile link.
-- country.
-- avatar.
-
-### Account Removal
-
-A user can delete the account after password confirmation.
-
-Account deletion removes user-owned channels and tracks.
-
-## Channels
-
-### Channel Creation
-
-A user can create a channel.
-
-Required channel field:
-
-- name.
-
-Optional channel fields:
-
-- description.
-- tags.
-- public link.
-- category.
-- cover image.
-- access mode.
-
-Default access mode is `Public`.
-
-### Channel Editing
-
-An owner can edit channel fields after creation.
-
-An owner can replace or remove the cover image.
-
-### Channel Deletion
-
-An owner can delete a channel.
-
-Channel deletion removes its playlist and channel-specific playback state.
-
-### Channel Visibility
-
-Public discovery must show only channels that meet all conditions:
-
-- access mode is `Public`.
-- channel has at least one track.
-- channel playback is active.
-
-Authenticated owners can see their own channels regardless of public discovery eligibility.
-
-### Channel Discovery
-
-Listeners can browse channels by:
-
-- popularity.
-- newest.
-- recently updated.
-- category.
-- tag.
-- search query.
-- owner.
-- bookmarks.
-- similar channels.
-
-Listeners can open one channel by channel id or public link.
-
-The service can suggest channels for a search query.
-
-The service can return one random playable channel.
-
-### Channel Category
-
-A category groups public channels by topic.
-
-A channel can have zero or one category.
-
-### Channel Tags
-
-Tags describe channel content.
-
-Tags support search, tag browsing, and similar-channel discovery.
-
-## Tracks
-
-### Upload
-
-A user can upload audio tracks.
-
-Accepted audio formats:
-
-- MP3.
-- FLAC.
-- AAC.
-- OGG.
-- M4A.
-- WAV.
-- MOD.
-- XM.
-- S3M.
-- STM.
-- IT.
-
-Upload limits:
-
-- max file size: 536870912 bytes.
-- max duration: 14400000 milliseconds.
-
-### Track Metadata
-
-A user can edit track metadata:
-
-- artist.
-- title.
-- album.
-- track number.
-- genre.
-- release date.
-- cue data.
-- buy link.
-- color group.
-- sharing permission.
-
-### Track Library
-
-A user has a track library.
-
-The track library contains uploaded tracks that are not deleted.
-
-A user can view all library tracks.
-
-A user can view unused tracks.
-
-Unused tracks are tracks not present in any channel playlist.
-
-### Track Deletion
-
-A user can delete owned tracks.
-
-Deleting a track removes it from all owner playlists.
-
-### Track Copy
-
-A user can copy a track.
-
-A user can copy a track directly into a channel playlist.
-
-## Playlists
-
-### Add Tracks
-
-An owner can add one or more owned tracks to a channel playlist.
-
-An owner can add tracks to the end of the playlist.
-
-An owner can add tracks as next items after the current track.
-
-### Remove Tracks
-
-An owner can remove one or more playlist entries.
-
-Removing a playlist entry does not delete the source track from the library.
-
-### Move Track
-
-An owner can move one playlist entry to another playlist position.
-
-### Shuffle
-
-An owner can shuffle channel playlist order.
-
-### Optimize
-
-An owner can rebuild playlist timing data.
-
-Optimization must keep the same playlist entries.
-
-### Playlist Loop
-
-Channel playback loops over the playlist.
-
-When playback reaches the end, it continues from the first playlist entry.
-
-## Playback
-
-### Start
-
-An owner can start channel playback.
-
-If a channel has no tracks, playback must not start.
-
-### Stop
-
-An owner can stop channel playback.
-
-A stopped channel has no active current track.
-
-### Resume
-
-An owner can resume channel playback.
-
-Resume continues from the stored channel position.
-
-### Skip
-
-An owner can skip to:
-
-- next playlist entry.
-- previous playlist entry.
-- random playlist entry.
-- selected playlist entry.
-
-### Current Track
-
-The service must compute current track from:
-
-- current time.
-- channel start time.
-- channel start offset.
-- playlist entry durations.
-
-### Schedule
-
-The service can provide:
-
-- current track.
-- upcoming track changes.
-- channel timeline.
-- now-playing data for selected channels.
-
-## Listening
-
-### Listen
-
-A listener can play channel audio from a playable channel.
-
-Playable channel rules:
-
-- public channel: any listener.
-- unlisted channel: any listener with direct link.
-- private channel: owner only.
-
-### Metadata
-
-A listener can see:
-
-- channel name.
-- channel description.
-- owner.
-- cover image.
-- tags.
-- current track.
-- time left in current track.
-- similar channels.
-
-### Playlist File
-
-A listener can download or open a playlist file for a channel.
-
-## Bookmarks
-
-A logged-in user can bookmark a channel.
-
-A logged-in user can remove a bookmark.
-
-A logged-in user can list bookmarked channels.
-
-Bookmarks must not change channel playback.
-
-## Search
-
-Search uses channel text fields:
-
-- name.
-- public link.
-- tags.
-
-Search returns channels matching query text.
-
-Search results must follow channel visibility rules.
-
-## Static Catalog Data
-
-The service provides catalog data required by UI clients:
-
-- countries.
-- categories.
-- track color groups.
-- genres.
-- access modes.
-
-## Notifications
-
-The service emits events when channel or playlist state changes.
-
-Events include:
-
-- channel deleted.
-- channel playback state changed.
-- playlist order changed.
-- bookmark added.
-- bookmark removed.
-
-Notifications must not be required for correctness. Stored state is authoritative.
-
-## Stats
-
-The service tracks:
-
-- active listener count.
-- channel playbacks.
-- channel bookmarks count.
-- channel listeners count.
-- user channel count.
-- user track count.
-- user total track duration.
-- user total track size.
-
-Derived counters must match source data after create, update, and delete operations.
+- channel id.
+- listener id or listener public link.
 
 ## Authorization
 
-Only authenticated users can:
+Anonymous listeners can:
+
+- browse public channels.
+- search public channels.
+- open public channels.
+- open unlisted channels by direct link.
+- listen to playable public and unlisted channels.
+
+Logged-in listeners can also:
+
+- bookmark channels.
+- remove bookmarks.
+- list bookmarks.
+- open private channels they were invited to.
+- listen to private channels they were invited to.
+
+Creators can:
 
 - create channels.
 - edit owned channels.
@@ -718,47 +913,35 @@ Only authenticated users can:
 - delete owned tracks.
 - manage owned playlists.
 - control owned channel playback.
-- bookmark channels.
+- invite listeners to owned private channels.
+- remove listeners from owned private channels.
 - edit profile.
 - delete account.
 
-Anonymous users can:
+Creators cannot edit channels, tracks, playlists, invitations, or playback state owned by another creator.
 
-- browse public channels.
-- search public channels.
-- open public channels.
-- open unlisted channels by direct link.
-- listen to playable public and unlisted channels.
+## Errors
 
-## Error Handling
-
-The service returns a structured error for failed operations.
+Service returns structured error for failed operation.
 
 Every error includes:
 
-- stable error code.
+- non-empty ASCII `snake_case` error code.
 - human-readable message.
 
-The service must not expose secrets in errors.
+Service does not expose secrets in errors.
 
 ## Legal
 
-Users must own or have permission to broadcast uploaded audio.
+Creators must own or have permission to broadcast uploaded audio.
 
-The service must not imply that uploading a track grants broadcast rights.
+Service does not imply that uploading track grants broadcast rights.
 
-The service must show or provide access to this constraint before public channel use.
+Service shows or provides access to this constraint before public channel use.
 
 ## Open Decisions
 
-1. Define exact password rules.
-2. Define whether comments remain part of product.
-3. Define whether account plans and payments remain part of product.
-4. Define whether social login remains part of product.
-5. Define whether private channels support invited listeners.
-6. Define whether stopped public channels should remain visible outside discovery.
-7. Define max length for profile text.
-8. Define max length for channel description.
-9. Define max length for track metadata text fields.
-10. Define max length for search query.
-11. Define max item count for non-channel paginated lists.
+1. Define exact password complexity beyond length.
+2. Define invite flow: user search, email, direct username, or generated link.
+3. Define max item count for non-channel paginated lists.
+4. Define whether ICY metadata is mandatory for AAC ADTS and Opus streams.
